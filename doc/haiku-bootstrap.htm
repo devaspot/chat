@@ -1,0 +1,246 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="synrc.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<div style="width:850px;position:absolute;z-index:2;">
+
+<div style="float:left;margin-bottom:24px;">
+<div style="width:137px;float:left;margin-right:6px;">
+	&nbsp;
+</div>
+<div style="width:653px;float:left;">
+	<h1>Haiku Bootstrap Architecture</h1>
+	<h2></h2>
+</div>
+</div>
+
+<div style="float:left;">
+<div style="width:137px;float:left;margin-right:6px;color:silver;font-weight:bold;text-align:right;">
+	Abstract
+</div>
+<div style="width:653px;float:left;">
+This article will describe current state of Haiku bootstrap architecture.
+It will unveil information about earliest boot stages,
+some hints to platform porters will be done.
+This can be interpreted as an extension to Haiku Article 
+<a href="http://www.haiku-os.org/documents/user/how_to_get_haiku_booted">Hot to get Haiku booted</a>.
+	<br>
+	<br>
+</div>
+</div>
+
+<div style="float:left;">
+<div style="width:137px;float:left;margin-right:6px;font-weight:bold;text-align:right;color:silver;">
+	 Stage 0
+</div>
+<div style="width:653px;float:left;">
+<b>Hardware Loader</b>
+<br><br>
+
+Here we draw various boot scenarions that are independed from OS and depends only 
+from hardware architecture. Current status on each platform and its perspectives
+will be discussed.
+
+<ul>
+<li><b>x86</b> legacy systems has many options to load first stage loader.
+It can be boot within other loaders such as LILO, GRUB, U-Boot or directly
+via MBR tiny bootstrap code. x86 stage 1 boot code can be found
+in stage1.bin and is placed in the start of BFS partition.
+Other option for x86 new systems is to boot first stage
+Haiku loder from EFI firmware that is similar to wide known
+OpenFirmware hardware abstraction standard.
+<blockquote style="background-color:#EEEEEE;margin:30px;padding:10px;">
+Currently Haiku on x86 can be booted from MBR or
+other boot loaders (LILO, GRUB, etc). Stage 1 and Stage 2 bootloaders are passed.
+Modern EFI boot process not supported <a href="http://www.haiku-os.org/articles/2009-11-18_multiboot_installation_gpt_disk">but GUID Partition Table is</a>.
+</blockquote>
+</li>
+
+<li><b>ARM</b> boards usually have OpenFirmware or U-Boot on its ROM.
+Widely used in ARM development is U-Boot monitor that is also a kind of loader.
+It has support of loading images from ext2, <a href="http://en.wikipedia.org/wiki/JFFS">JFFS</a>, TFTP, NFS and other
+filesystems. But BFS support in U-Boot is definetly missing.
+<blockquote style="background-color:#EEEEEE;margin:30px;padding:10px;">
+Currently stage 2 bootloader on ARM can be booted only from U-Boot directly 
+within using special form of gzipped bootable
+image (uimage) prepared with U-Boot mkimage tool. This is temporary sate of things as stage 1
+bootloader (BFS Boot code) is not used. <a href="http://www.haiku-os.org/blog/pfoetchen/2009-08-18/finally_haiku_arm_port_update">Stage 2 is passed</a> though.
+</blockquote></li>
+
+<li><b>PowerPC</b> machines and development boards are also use both OpenFirmware ROMs
+and U-Boot ROMs (such as SAM440ep). But more common for PowerPC world is to use
+OpenFirmware (Pegasus, Apple, IBM).
+<blockquote style="background-color:#EEEEEE;margin:30px;padding:10px;">
+Currently stage 2 bootloader on PowerPC can be booted as ELF
+image only from OpenFirmware directly in a form of ISO 9660 image.
+Stage 1 bootloader (BFS Boot Code) is not used. Stage 2 is not passed.
+</blockquote>
+</li>
+</ul>
+<br>
+</div>
+</div>
+
+<div style="float:left;">
+<div style="width:137px;float:left;margin-right:6px;font-weight:bold;text-align:right;color:silver;">
+	 Stage 1
+</div>
+<div style="width:653px;float:left;">
+<b>BFS Boot Code</b>
+<br><br>
+The main purpose of first stage boot loader is to
+load <b>haiku_loader</b> ELF binary image that resides on BFS partition <b>/system/haiku_loader</b>.
+Normally BFS Boot Code is platform dependend and must be implemented for any supporting platform.<br><br>
+
+Pretty attractive case of loading stage 2 bootloader is to provide BFS access (searching by BFS
+nodes for <b>haiku_loader</b>) directly from ROM (stage 0 bootloader).
+This is already done for ext2 filesystems in U-Boot or ISO9660 in OpenFirmware.
+It is possible for hardware manufacturers provide modified version of ROM.
+
+<blockquote style="background-color:#EEEEEE;margin:30px;padding:10px;"><b>Notes on x86 implementation </b><br><br>
+
+BFS Boot Code detects drive id, check if we have disk extension provided by the BIOS,
+load the rest of the stage 1 bootloader, validate the BFS superblock, search the 
+stage 2 bootloader on disk, load the stage 2 bootloader into memory and run the stage 2 bootloader.<br><br>
+
+Stage 1 boot code can be found in <b>/src/system/boot/platform/bios_ia32</b>.
+The offset of the partition in 512 byte blocks must be written at position 
+PARTITION_OFFSET_OFFSET or otherwise the code can't find the partition.
+The partition must be a BFS formatted. The stage 2 boot loader &mdash; <b>/system/haiku_loader</b>
+loaded into memory at 0x1000:0x0000 and entered at 0x:1000:0x0200 with EAX (partition offset in 512 byte blocks) and DL (BIOS ID of the boot drive).
+<br>
+</blockquote>
+
+<b>makebootable</b> binary utility makes the specified BFS partitions/devices
+bootable by writing BFS boot code into the first two sectors. It doesn't mark the partitions active.
+This utility can be compiled to run under BSD, Linux, Mac OS X, BeOS and Haiku hosts. 
+In the case of a missing makebootable we never get to that stage 2 bootloader. You can read
+more about makebootable in <a href="http://www.haiku-os.org/blog/mmlr/2009-02-08/makebootable_what_and_why_and_how_do_it_manually">Haiku Article about makebootable</a>.
+<br><br>
+</div>
+</div>
+
+<div style="float:left;">
+<div style="width:137px;float:left;margin-right:6px;color:silver;font-weight:bold;text-align:right;">
+	Stage 2
+</div>
+<div style="width:653px;float:left;">
+<b>Haiku Loader</b>
+<br><br>
+
+<p>Haiku loader is second stage boot loader. It is presented as <b>haiku_loader</b> ELF image 
+that reside on BFS boot partition. The main purpose of second stage boot loader 
+is to load relocated kernel. It draws Menu select boot device with BFS partition,
+collecting kernel startup settings and passes them to kernel.</p>
+
+<p>The second stage boot loader divided onto two parts:
+platform depended that is startup entry point itself and platform depended
+functions and such as video framebuffer or video console platform
+depended functions and platform independed menu, file system support
+and <b>main</b> platform independed function.</p><br>
+
+<p><b>Hardware Abstraction Layer</b></p>
+
+<p>All platform depended functions (hardware abstraction layer) that is used in Haiku Loader can
+be divided into following groups: Menu, Devices, Memory, Serial Port, Keyboard, Video, Processor.
+Memory is about to manage basic mmu settings and second stage loader's heap.
+There are two MMU modes: one is for haiku loader and second is for kernel bootstrap.</p>
+
+<p>For each hardware platform must be implemented following functions:</p>
+
+<ul>
+
+<li><b>Menu</b>:
+
+platform_add_menus,
+platform_update_menu_item,
+platform_run_menu</li>
+
+<li><b>Devices</b>:
+
+platform_add_boot_device,
+platform_get_boot_partition,
+platform_add_block_devices,
+platform_register_boot_device</li>
+
+<li><b>Memory</b>:
+
+platform_init_heap,
+platform_release_heap,
+platform_allocate_region,
+platform_free_region,
+mmu_map_physical_memory,
+mmu_allocate,
+mmu_free,
+mmu_init,
+mmu_init_for_kernel</li>
+
+<li><b>Serial Port</b>:
+
+serial_putc,
+serial_disable,
+serial_enable,	
+serial_cleanup,
+serial_init</li>
+
+<li><b>Keyboard</b>:
+
+clear_key_buffer,
+wait_for_key,
+check_for_boot_keys</li>
+
+<li><b>Processor</b>:
+
+cpu_init</li>
+
+<li><b>Boot</b>:
+
+platform_start_kernel</li>
+
+</ul>
+
+<p>This hardware abstraction layer functions are resides in Haiku
+repository in <b>haiku/src/system/boot/platform/*</b> directories.</p><br>
+
+<b>Platform Independed Code</b>
+
+<p>Platform independed Haiku Loader code lives
+in <b>/src/system/boot/platform/generic</b> and <b>/src/system/boot/loader</b> directories.
+The platform depended bootstrap code fires up <b>main</b> function in platform independed part of loader directly.</p>
+
+<p>The main function of second stage loaders inits heap, video.
+Then its retrieve boot filesystem to boot up, if no found it shows user menu.
+Then it loads modules and kernel with <b>elf_load_image</b> and starts kernel by calling <b>platform_start_kernel</b> from HAL API.</p>
+
+<br><br>
+
+Maxim Sokhatsky (maxim.sokhatsky@gmail.com)<br>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc/3.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/">Creative Commons Attribution-Noncommercial 3.0 Unported License</a>.
+<br><br>
+</div>
+</div>
+
+</div>
+
+<div style="width:330px;position:absolute;margin-left:860px;z-index:1;">
+	<!--iframe src="../../tantras.htm" 
+			frameborder=0
+			width=420
+			height=1800>
+	</iframe-->
+	<h1>Contents</h1>
+	Abstract<br>
+	Hardware Loader<br>
+	BFS Boot Code<br>
+	Haiku Loader<br>
+	Kernel Initialization<br>
+</div>
+
+</body>
+</html>
+
+
+	
