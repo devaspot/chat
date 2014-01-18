@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////
-// Haiku Chat [BlabberMainWindow.h]
-//     Central information display.
+// Haiku Chat [MainWindow.h]
 //////////////////////////////////////////////////
 
 #ifndef BLABBER_MAIN_WINDOW_H
@@ -11,6 +10,7 @@
 #include <interface/CheckBox.h>
 #include <interface/MenuItem.h>
 #include <interface/PopUpMenu.h>
+#include <GridView.h>
 #include <interface/TabView.h>
 #include <interface/TextControl.h>
 #include <interface/Window.h>
@@ -43,7 +43,7 @@ private:
 	// singleton
 	static BlabberMainWindow *_instance;
 	
-	BView                    *_login_full_view;
+	BGridView                    *_login_full_view;
 
 	BTextControl             *_login_realname;
 	BTextControl             *_login_username;

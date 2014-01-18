@@ -30,10 +30,6 @@ void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 	owner->SetFont(be_plain_font);
 	owner->SetFontSize(11);
 	
-				//owner->GetFont(&statusFont);
-				//statusFont.SetFace(B_ITALIC_FACE);
-				//owner->SetFont(&statusFont);
-
 	// clear rectangle
 	if (IsSelected())
 	{

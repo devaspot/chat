@@ -85,7 +85,7 @@ void RosterView::AttachedToWindow()
 	BOutlineListView::AttachedToWindow();
 
 	// on double-click
-	//SetInvocationMessage(new BMessage(JAB_OPEN_CHAT_WITH_DOUBLE_CLICK));
+	SetInvocationMessage(new BMessage(JAB_OPEN_CHAT_WITH_DOUBLE_CLICK));
 
 	// popup menu
 	_popup = new BPopUpMenu(NULL, false, false);
@@ -366,7 +366,8 @@ void RosterView::UpdateRoster()
 			
 		
 			// change of statuses
-			if (item->GetUserID()->OnlineStatus() != _item_to_status_map[Superitem(item)])
+			if (item->GetUserID()->OnlineStatus() !=_item_to_status_map[Superitem(item)]) 
+
 			{
 				UserID::online_status old_status = _item_to_status_map[Superitem(item)];
 				RemoveItem(item);

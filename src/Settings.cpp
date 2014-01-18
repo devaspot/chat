@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-// Haiku Chat [BlabberSettings.cpp]
+// Haiku Chat [Settings.cpp]
 //////////////////////////////////////////////////
 
 #ifndef BLABBER_SETTINGS_H
@@ -18,7 +18,7 @@ BlabberSettings *BlabberSettings::_instance = NULL;
 
 BlabberSettings *BlabberSettings::Instance() {
 	if (_instance == NULL) {
-		_instance = new BlabberSettings("jabber-for-beos/app-settings");
+		_instance = new BlabberSettings("Chat/app-settings");
 	}
 	
 	return _instance;

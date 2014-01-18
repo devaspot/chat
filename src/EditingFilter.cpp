@@ -17,8 +17,6 @@ EditingFilter::EditingFilter(BTextView *v, ChatWindow *w)
 filter_result EditingFilter::Filter(BMessage *message, BHandler **target) {
 	int32 modifiers;
 	
-	bool newLinesAllowed = true;
-
 	int8 byte;
 	message->FindInt8("byte", &byte);
 
@@ -35,17 +33,12 @@ filter_result EditingFilter::Filter(BMessage *message, BHandler **target) {
 	{
 		//window->RevealNextHistory();
 	}
-	else if (newLinesAllowed && (modifiers & B_COMMAND_KEY) == 0 && byte == B_ENTER)
+	else if ((modifiers & B_COMMAND_KEY) != 0 && byte == B_ENTER)
 	{
 		view->Insert("\n");
 		return B_SKIP_MESSAGE;
 	}
-	else if (!newLinesAllowed && (modifiers & B_COMMAND_KEY) != 0 && byte == B_ENTER)
-	{
-		view->Insert("\n");
-		return B_SKIP_MESSAGE;
-	}
-	else if (newLinesAllowed && (modifiers & B_COMMAND_KEY) != 0 && byte == B_ENTER)
+	else if ((modifiers & B_COMMAND_KEY) == 0 && byte == B_ENTER)
 	{
 		window->PostMessage(JAB_CHAT_SENT);
 	}

@@ -1,5 +1,7 @@
 //////////////////////////////////////////////////
-// Haiku Chat [ChatTextView.cpp]
+// Haiku Chat [ChatTextView.cpp] from Jabber4BeOS
+//
+// This file is  a crap, it should be rewritten
 //////////////////////////////////////////////////
 
 #include "ChatTextView.h"
