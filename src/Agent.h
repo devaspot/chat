@@ -1,8 +1,12 @@
-//////////////////////////////////////////////////
-// Blabber [Agent.h]
-//     Agent information.
-//////////////////////////////////////////////////
-
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
+ 
 #ifndef AGENT_H
 #define AGENT_H
 
@@ -10,49 +14,48 @@
 
 class Agent {
 	public:
-		        Agent();
-		       ~Agent();
+		        				Agent();
+		       					~Agent();
 
-		std::string  JID() const;
-		std::string  Name();
-		std::string  Description();
-		std::string  Service() const;
-		bool    IsRegisterable() const;
-		bool    IsRegistered() const;
-		std::string  Transport();
-		bool    IsSearchable();
+				std::string  	JID() const;
+				std::string  	Name();
+				std::string  	Description();
+				std::string  	Service() const;
+				std::string  	Username() const;
+				std::string  	Password() const;
+				std::string  	Transport();
 
-		std::string  Username() const;
-		std::string  Password() const;
+				bool    		IsRegisterable() const;
+				bool    		IsRegistered() const;
+				bool    		IsSearchable();
 
-		void    SetJID(std::string jid);
-		void    SetName(std::string name);
-		void    SetDescription(std::string description);
-		void    SetService(std::string service);
-		void    SetRegisterableFlag(bool is_registerable);
-		void    SetRegisteredFlag(bool is_registered);
-		void    SetTransport(std::string transport);
-		void    SetSearchableFlag(bool is_searchable);
+				void    		SetJID(std::string jid);
+				void   			SetName(std::string name);
+				void    		SetDescription(std::string description);
+				void    		SetService(std::string service);
+				void    		SetRegisterableFlag(bool is_registerable);
+				void    		SetRegisteredFlag(bool is_registered);
+				void    		SetTransport(std::string transport);
+				void    		SetSearchableFlag(bool is_searchable);
+				void    		SetUsername(std::string username);
+				void    		SetPassword(std::string password);
 
-		void    SetUsername(std::string username);
-		void    SetPassword(std::string password);
-
-		void    Register();
-		void    UnRegister();
+				void    		Register();
+				void    		UnRegister();
 
 	private:
-		std::string _jid;
-		std::string _name;
-		std::string _description;
-		std::string _service;
-		bool   _is_registerable;
-		std::string _transport;
-		bool   _is_searchable;
+	
+				std::string 	_jid;
+				std::string 	_name;
+				std::string 	_description;
+				std::string 	_service;
+				std::string 	_transport;
+				std::string 	_username;
+				std::string 	_password;
 
-		std::string _username;
-		std::string _password;
-
-		bool   _is_registered;
+				bool   			_is_searchable;
+				bool   			_is_registerable;
+				bool   			_is_registered;
 };
 
 #endif

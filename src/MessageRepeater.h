@@ -1,9 +1,11 @@
-//////////////////////////////////////////////////
-// Message Repeater [MessageRepeater.h]
-//     Echoes BMessages sent to it to all
-//     registered message handlers. Acts as a
-//     singleton.
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #ifndef MESSAGE_REPEATER_H
 #define MESSAGE_REPEATER_H
@@ -16,25 +18,24 @@ typedef std::list<BLooper *>::iterator        LooperIter;
 typedef std::list<BLooper *>::const_iterator  ConstLooperIter;
 
 class MessageRepeater : public BLooper {
+
 public:
-	static MessageRepeater  *Instance();
-	                        ~MessageRepeater();
 
-	void                     MessageReceived(BMessage *msg);
-
-	void                     AddTarget(BLooper *added_looper);
-	void                     RemoveTarget(BLooper *removed_looper);
+	static	MessageRepeater*	Instance();
+	                        	~MessageRepeater();
+			void             	MessageReceived(BMessage *msg);
+			void                AddTarget(BLooper *added_looper);
+			void                RemoveTarget(BLooper *removed_looper);
 
 protected:
-	                         MessageRepeater();
+	                         	MessageRepeater();
 
 private:
-	void                     _Broadcast(BMessage *msg);
 
-	static MessageRepeater *_instance;
-	LooperList              _looper_list;
-	
-	sem_id                  _looper_lock;
+			void                _Broadcast(BMessage *msg);
+	static 	MessageRepeater*	fInstance;
+			LooperList          fLooperList;
+			sem_id              fLooperLock;
 	
 };
 

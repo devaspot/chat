@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014, Synrc Research Center s.r.o. All rights reserved.
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
  * Distributed under the terms of the MIT license.
  *
  * Authors:
@@ -8,12 +8,11 @@
  *
  */
 
-#include <InterfaceKit.h>
 #include <cstdio>
-#include <app/Application.h>
-#include <interface/MenuBar.h>
-#include <interface/MenuItem.h>
-#include <interface/ScrollView.h>
+#include <Application.h>
+#include <MenuBar.h>
+#include <MenuItem.h>
+#include <ScrollView.h>
 #include <String.h>
 #include <LayoutBuilder.h>
 #include <stdlib.h>
@@ -22,7 +21,6 @@
 
 #include "MainWindow.h"
 #include "BuddyWindow.h"
-#include "AppLocation.h"
 #include "Messages.h"
 #include "ChatWindow.h"
 #include "JabberProtocol.h"

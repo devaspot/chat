@@ -5,7 +5,6 @@
 #include "BuddyWindow.h"
 #include <cstdio>
 #include <Application.h>
-#include "AppLocation.h"
 #include "Settings.h"
 #include "GenericFunctions.h"
 #include "Messages.h"

@@ -9,12 +9,16 @@
 #include "ChatWindow.h"
 
 EditingFilter::EditingFilter(BTextView *v, ChatWindow *w)
-	: BMessageFilter(B_ANY_DELIVERY, B_ANY_SOURCE, B_KEY_DOWN, NULL) {
+	:
+	BMessageFilter(B_ANY_DELIVERY, B_ANY_SOURCE, B_KEY_DOWN, NULL)
+{
 	view   = v;
 	window = w;
 }
 
-filter_result EditingFilter::Filter(BMessage *message, BHandler **target) {
+filter_result
+EditingFilter::Filter(BMessage *message, BHandler **target)
+{
 	int32 modifiers;
 	
 	int8 byte;

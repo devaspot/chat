@@ -1,3 +1,12 @@
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
+ 
 #include "App.h"
 #include "MainWindow.h"
 #include "TalkManager.h"
@@ -5,11 +14,11 @@
 #include "ChatWindow.h"
 #include "SecureSocket.h"
 #include "JabberProtocol.h"
-
 #include "version.h"
 
 App::App(void)
-	:	BApplication("application/x-vnd.Chat")
+	:	
+	BApplication("application/x-vnd.Chat")
 {
 	
 	MessageRepeater::Instance()->Run();

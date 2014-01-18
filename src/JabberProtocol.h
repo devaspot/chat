@@ -1,6 +1,10 @@
 /*
- * Copyright 2010 Maxim Sokhatsky <maxim.sokhatsky@gmail.com>
- * All rights reserved. Distributed under the terms of the MIT license.
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
  */
  
 #ifndef JABBER_PROTOCOL_H
@@ -57,10 +61,6 @@ class JabberProtocol : public XMLReader
 				void			Pong(BString id, BString from);
 				void			LockXMLReader();
 				void			UnlockXMLReader();
-				void			OnStartTag(XMLEntity *entity);
-				void			OnEndTag(XMLEntity *entity);
-				void			OnEndEntity(XMLEntity *entity);
-				void			OnTag(XMLEntity *entity);
 				void			ParseRosterList(XMLEntity *entity);
 				void			ProcessPresence(XMLEntity *entity);
 				void			ParseStorage(XMLEntity *storage);
@@ -85,13 +85,18 @@ class JabberProtocol : public XMLReader
 				void			SendGroupPresence(string _group_room, string _group_username);
 				void			RequestRoomOptions(BString room);
 				
-				SSLAdapter		*socketAdapter;
+				void			OnStartTag(XMLEntity *entity);
+				void			OnEndTag(XMLEntity *entity);
+				void			OnEndEntity(XMLEntity *entity);
+				void			OnTag(XMLEntity *entity);
+
+				SSLAdapter*		socketAdapter;
 				sem_id			logged;
 				sem_id			read_queue;
 				BString			jid;
 				BString			user;
 				BString			domain;		
-		BlabberMainWindow		*mainWindow;
+         BlabberMainWindow*		mainWindow;
 				sem_id          xml_reader_lock;
 				bool			_storage_supported;
 				

@@ -1,7 +1,11 @@
-//////////////////////////////////////////////////
-// Haiku Chat [Messages.h]
-//     BMessage identities for GUI communication.
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #ifndef MESSAGES_H
 #define MESSAGES_H
@@ -17,7 +21,6 @@
 #define JAB_CLOSE                       0x13000000
 #define JAB_ABOUT                       0x13003333
 #define JAB_QUIT                        0x13006666
-
 #define JAB_PREFERENCES                 0x1300AAA0
 #define JAB_PREFERENCES_DATAFORM		0x1300AAA1
 #define JAB_AFFILIATIONS                0x1300AAA2
@@ -33,21 +36,16 @@
 #define JAB_OPEN_MESSAGE                0x14000000
 #define JAB_OPEN_NEW_MESSAGE            0x14000888
 #define JAB_CLOSE_MESSAGE               0x14001000
-
 #define JAB_OPEN_CHAT                   0x14001888
 #define JAB_OPEN_CHAT_WITH_DOUBLE_CLICK 0x14001889
 #define JAB_OPEN_NEW_CHAT               0x14002000
 #define JAB_CLOSE_CHAT                  0x14002888
-
 #define JAB_OPEN_NEW_GROUP_CHAT         0x14002900
 #define JAB_CLOSE_GROUP_CHAT            0x14002904
-
 #define JAB_MESSAGE_SENT                0x14004000
 #define JAB_MESSAGE_RECV                0x14004888
-
 #define JAB_CHAT_SENT                   0x14005000
 #define JAB_CHAT_RECV                   0x14005888
-
 #define JAB_GROUP_CHATTER_ONLINE        0x14006000
 #define JAB_GROUP_CHATTER_OFFLINE       0x14006888
 
@@ -66,9 +64,7 @@
 #define JAB_START_RECORD                0x1400C000
 #define JAB_STOP_RECORD                 0x1400C888
 #define JAB_SHOW_CHATLOG                0x1400C001
-
 #define JAB_CLOSE_TALKS                 0x1400C999
-
 #define JAB_ROTATE_CHAT_FORWARD         0x1400D000
 #define JAB_ROTATE_CHAT_BACKWARD        0x1400D001
 #define JAB_FOCUS_BUDDY                 0x1400D002

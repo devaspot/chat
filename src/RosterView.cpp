@@ -1,6 +1,11 @@
-//////////////////////////////////////////////////
-// Haiku Chat [RosterView.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #include "RosterView.h"
 #include <cstdio>
@@ -18,7 +23,8 @@ RosterView::RosterView(BRect frame)
 	SetHighColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 }
 
-RosterView::~RosterView() {
+RosterView::~RosterView()
+{
 	delete _popup;
 
 	BlabberSettings::Instance()->SetTag("online-collapsed", !_online->IsExpanded());
@@ -26,8 +32,6 @@ RosterView::~RosterView() {
 	BlabberSettings::Instance()->SetTag("offline-collapsed", !_offline->IsExpanded());
 	BlabberSettings::Instance()->SetTag("conferences-collapsed", !_conferences->IsExpanded());
 	BlabberSettings::Instance()->WriteToFile();
-	
-	//SetInvocationMessage(new BMessage(JAB_OPEN_CHAT_WITH_DOUBLE_CLICK));
 }
 
 static int _ListComparison(const BListItem *a, const BListItem *b)
@@ -85,13 +89,9 @@ static int _ListComparison(const BListItem *a, const BListItem *b)
 
 void RosterView::AttachedToWindow()
 {
-	// superclass call	
 	BOutlineListView::AttachedToWindow();
-
-	// on double-click
 	SetInvocationMessage(new BMessage(JAB_OPEN_CHAT_WITH_DOUBLE_CLICK));
 
-	// popup menu
 	_popup = new BPopUpMenu(NULL, false, false);
 
 	_chat_item         = new BMenuItem("Message...", new BMessage(JAB_OPEN_CHAT));
@@ -121,10 +121,8 @@ void RosterView::AttachedToWindow()
 	_popup->AddSeparatorItem();
 	_popup->AddItem(_presence);
 
-	// initialize menu
 	UpdatePopUpMenu();
 
-	// create top level lists
 	AddItem(_online  = new RosterSuperitem("Online"));
 	AddItem(_offline = new RosterSuperitem("Offline"));
 	AddItem(_unknown = new RosterSuperitem("No Presence"));
@@ -148,72 +146,59 @@ void RosterView::AttachedToWindow()
 	_popup->SetTargetForItems(Window());
 }
 
-RosterItem *RosterView::CurrentItemSelection() {
+RosterItem*
+RosterView::CurrentItemSelection()
+{
 	int32 index = CurrentSelection();
-	
-	if (index >= 0) {
-		return dynamic_cast<RosterItem *>(ItemAt(index));
-	} else {
-		return NULL;
-	}
+	if (index >= 0) return dynamic_cast<RosterItem *>(ItemAt(index));
+	else return NULL;
 }
 
-void RosterView::KeyDown(const char *bytes, int32 len)
+void
+RosterView::KeyDown(const char *bytes, int32 len)
 {
 }
 
-void RosterView::MouseDown(BPoint point) {
-	// accept first click
+void
+RosterView::MouseDown(BPoint point)
+{
 	Window()->Activate(true);
-
-	// get mouse info before it's too late!
 	uint32 buttons = 0;
 	GetMouse(&point, &buttons, true);
-
-	// superclass stuff
 	BOutlineListView::MouseDown(point);
 
-	if (buttons & B_SECONDARY_MOUSE_BUTTON) {
-		// update menu before presentation
-		UpdatePopUpMenu();
-		
-		BPoint screen_point(point);
-		ConvertToScreen(&screen_point);
-		
-		BRect r(screen_point.x - 4, screen_point.y - 20, screen_point.x + 24, screen_point.y + 4);
-		_popup->Go(screen_point, true, true, r, false);
-		//_popup->Go(screen_point, true, true, false);
+	if (buttons & B_SECONDARY_MOUSE_BUTTON)
+	{
+		RosterItem *item = CurrentItemSelection();
+		if (item && !item->StalePointer())
+		{
+			UpdatePopUpMenu();
+			BPoint screen_point(point);
+			ConvertToScreen(&screen_point);
+			BRect r(screen_point.x - 4, screen_point.y - 20, screen_point.x + 24, screen_point.y + 4);
+			_popup->Go(screen_point, true, true, r, false);
+		}
 	}
 }
 
-void RosterView::RemoveSelected()
+void
+RosterView::RemoveSelected()
 {
 	if (CurrentItemSelection())
 	{
-		// numeric and object based selections
 		int32       selected = CurrentSelection();
 		RosterItem *item     = CurrentItemSelection();
-		
-		if (item == NULL) {
-			// not a roster item, won't remove
-			return;
-		}
-		
-		// remove item from view
+		if (item == NULL) return;
 		RemoveItem(CurrentSelection());
-
-		// select next buddy for continuity
-		if (ItemAt(selected))
-			Select(selected);
-		else if (ItemAt(selected - 1))
-			Select(selected - 1);
+		if (ItemAt(selected)) Select(selected);
+		else if (ItemAt(selected - 1)) Select(selected - 1);
 	}
 }
 
-void RosterView::SelectionChanged() {
-	// customize popup menu
+void
+RosterView::SelectionChanged()
+{
 	UpdatePopUpMenu();
-	
 	BOutlineListView::SelectionChanged();
 }
 
@@ -239,36 +224,22 @@ void RosterView::LinkUser(UserID *added_user)
 	}
 }
 
-void RosterView::UnlinkUser(UserID *removed_user) {
-	// does user exist
+void
+RosterView::UnlinkUser(UserID *removed_user)
+{
 	uint32 index = FindUser(removed_user);
-	
-	if (index >= 0) {
-		RemoveItem(index);	
-	}
+	if (index >= 0) RemoveItem(index);
 }
 
-int32 RosterView::FindUser(UserID *compare_user) {
-	// handle NULL argument
-	if (compare_user == NULL) {
-		return -1;
-	}
-
+int32
+RosterView::FindUser(UserID *compare_user)
+{
+	if (compare_user == NULL) return -1;
 	for (int i=0; i<FullListCountItems(); ++i) {
-		// get item
 		RosterItem *item = dynamic_cast<RosterItem *>(FullListItemAt(i));
-
-		if (item == NULL || item->StalePointer()) {
-			continue;
-		}
-				
-		// compare against RosterView
-		if (item->GetUserID() == compare_user) {
-			return i;
-		}
+		if (item == NULL || item->StalePointer()) continue;
+		if (item->GetUserID() == compare_user) return i;
 	}
-
-	// no match
 	return -1;
 }
 
@@ -322,10 +293,8 @@ int RosterView::GetConferencesCount()
 const UserID *RosterView::GetConference(int i)
 {
 	RosterItem *item = (RosterItem*)ItemUnderAt(_conferences, true, i);
-	if (item)
-		return item->GetUserID();
-	else
-		return NULL;
+	if (item) return item->GetUserID();
+	else return NULL;
 }
 
 void RosterView::UpdateRoster()
@@ -385,15 +354,11 @@ void RosterView::UpdateRoster()
 		} 
 
 	}
-	
-	
-	
+
 	SortItemsUnder(_online, true, _ListComparison);
 	//SortItemsUnder(_offline, true, _ListComparison);
 	//SortItemsUnder(_unknown, true, _ListComparison);
 	//SortItemsUnder(_conferences, true, _ListComparison);
-	
-	
 	
 	Invalidate();
 

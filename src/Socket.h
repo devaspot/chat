@@ -1,3 +1,12 @@
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
+
 #ifndef ADAPTER_H_
 #define ADAPTER_H_
 
@@ -24,7 +33,7 @@ class Adapter
 		virtual	bool		IsConnected() = 0;
 		virtual void		Close() = 0;
 		
-				BString			hostname;
+				BString		hostname;
 				int			port;
 				int			sock;
 

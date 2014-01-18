@@ -1,3 +1,12 @@
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
+
 #include "ChatWindow.h"
 #include "ChatTextView.h"
 #include "SplitView.h"
@@ -26,37 +35,42 @@
 #include <FindDirectory.h>
 #include <storage/Path.h>
 
-void ChatWindow::SetThreadID(string id)
+void
+ChatWindow::SetThreadID(string id)
 {
 	_thread = id;
 }
 
-const UserID *ChatWindow::GetUserID()
+const UserID*
+ChatWindow::GetUserID()
 {
 	return _user;
 }
 
-string ChatWindow::GetGroupRoom()
+string
+ChatWindow::GetGroupRoom()
 {
 	return _group_room;
 }
 
-string ChatWindow::GetGroupUsername()
+string
+ChatWindow::GetGroupUsername()
 {
 	return _group_username;
 }
 
 ChatWindow::~ChatWindow()
 {
-
-	
 	MessageRepeater::Instance()->RemoveTarget(this);
-		
 	fprintf(stderr, "ChatWindow desctructor called.\n");
 }
 
 ChatWindow::ChatWindow(talk_type type, UserID *user)
-	:BWindow(BRect(100,100,500,400), ("ChatWindow:" + user->JabberHandle()).c_str(),B_DOCUMENT_WINDOW, B_ASYNCHRONOUS_CONTROLS)
+	:
+	BWindow(BRect(100,100,500,400),
+			("ChatWindow:" + user->JabberHandle()).c_str(),
+			B_DOCUMENT_WINDOW,
+			B_ASYNCHRONOUS_CONTROLS)
 {
 	_chat_index = -1;
 	
@@ -72,30 +86,7 @@ ChatWindow::ChatWindow(talk_type type, UserID *user)
 	}
 	
 	_thread = GenericFunctions::GenerateUniqueID();
-	/*
-	 bool bAutoOpenChatLog = BlabberSettings::Instance()->Tag("autoopen-chatlog");
-	string chatlog_path = "";
-	if (BlabberSettings::Instance()->Data("chatlog-path") != NULL) {
-		chatlog_path = BlabberSettings::Instance()->Data("chatlog-path");
-	}
-	if(bAutoOpenChatLog) {
-		if(0 == chatlog_path.size()) {
-			BPath path;
-			find_directory(B_USER_DIRECTORY, &path);
-			chatlog_path = path.Path();
-		}
-		// assure that directory exists...
-		create_directory(chatlog_path.c_str(), 0777);
-		if(_user != 0) {
-		  chatlog_path += "/" + _user->JabberHandle();
-		} else {
-		  chatlog_path += "/" + group_room;
-		}	
-		// start file
-		_log = fopen(chatlog_path.c_str(), "a");
-		_am_logging = (0 != _log);
-	}
-	*/
+
 	BRect b = Bounds();
 	BRect ori = b;
 	float statusHeight = 12;
@@ -249,15 +240,6 @@ ChatWindow::ChatWindow(talk_type type, UserID *user)
 	Show();
 }
 
-/*
-ChatWindow::ChatWindow(void)
-	:	BWindow(BRect(100,100,500,400),"Travis",B_DOCUMENT_WINDOW, B_ASYNCHRONOUS_CONTROLS)
-{
-	
-   
-}
-*/
-
 void
 ChatWindow::FrameResized(float width, float height)
 {
@@ -278,12 +260,7 @@ ChatWindow::FrameResized(float width, float height)
 
 	historyTextView->Invalidate();
 	historyScroller->Invalidate();
-	
-	// remember sizes of message windows
-	//if (_type == TalkWindow::MESSAGE) {
-	//	BlabberSettings::Instance()->SetFloatData("message-window-width", width);
-	//	BlabberSettings::Instance()->SetFloatData("message-window-height", height);
-	//}
+
 }
 
 void
@@ -358,7 +335,6 @@ ChatWindow::AddToTalk(string username, string message, user_type type)
 	*/
 	else
 	{
-		// print message
 		if (last_username.empty() || last_username != username || type == ChatWindow::TOPIC)
 		{
 
@@ -384,14 +360,8 @@ ChatWindow::AddToTalk(string username, string message, user_type type)
 			historyTextView->Insert(historyTextView->TextLength(), ": ", 2, &tra_thin_black);
 		}
 
-		// проебался с этой хуйней двое суток.ъ
-		// оно вылазит где-то за границы, и затирает код,в результате чего ошибка
-		// становиться очень сложно обнаоуживаемой
-		
-		//text_run_array *this_array;
-		//GenerateHyperlinkText(message, tr_thin_black, &this_array);
-		historyTextView->Insert(historyTextView->TextLength(), message.c_str(), message.size(), &tra_thin_black);//this_array);
-		//free(this_array);
+
+		historyTextView->Insert(historyTextView->TextLength(), message.c_str(), message.size(), &tra_thin_black);
 		historyTextView->Insert(historyTextView->TextLength(), "\n", 1, &tra_thin_black);
 	}
 	
@@ -399,7 +369,9 @@ ChatWindow::AddToTalk(string username, string message, user_type type)
 	
 }
 
-static int _PeopelListComparison(const void *a, const void *b)
+static
+int
+_PeopelListComparison(const void *a, const void *b)
 {
 	if ((*(PeopleListItem **)a)->_role ==
 		(*(PeopleListItem **)b)->_role)
@@ -425,24 +397,16 @@ ChatWindow::AddGroupChatter(string user, string show, string status, string role
 {
 	int i;
 
-	//Lock();
-	
-	// create a new entry
 	PeopleListItem *people_item = new PeopleListItem(_group_username, user, show, status, role, affiliation);
 	
-	// exception
-	if (_people->CountItems() == 0) {
-		// add the new user
+	if (_people->CountItems() == 0)
+	{
 		_people->AddItem(people_item);
-
-		//Unlock();
 		return;
 	}
-	
-	
+		
 	bool has = false;
 
-	// add it to the list
 	for (i=0; i < _people->CountItems(); ++i)
 	{
 		PeopleListItem *iterating_item = dynamic_cast<PeopleListItem *>(_people->ItemAt(i));
@@ -469,14 +433,11 @@ ChatWindow::AddGroupChatter(string user, string show, string status, string role
 		_people->SortItems(_PeopelListComparison);
 	}
 	
-	//Unlock();
 }
 
 void
 ChatWindow::RemoveGroupChatter(string username)
 {
-	//Lock();
-	// remove user
 	for (int i=0; i < _people->CountItems(); ++i) {
 		if (dynamic_cast<PeopleListItem *>(_people->ItemAt(i))->User() == username) {
 			_people->RemoveItem(i);
@@ -484,245 +445,7 @@ ChatWindow::RemoveGroupChatter(string username)
 			return;
 		}
 	}
-	//Unlock();
 }
-
-int ChatWindow::CountHyperlinks(string message)
-{
-	string::size_type curr_pos = 0, link_start, link_end;
-	string::size_type find1, find2, find3;
-	
-	// keep count
-	int link_count = 0;
-	
-	// find next link
-	link_start = message.find("http://", curr_pos);
-
-	find1 = message.find("ftp://", curr_pos);
-	if (find1 != string::npos && (link_start == string::npos || find1 < link_start)) {
-		link_start = find1;
-	}
-
-	find2 = message.find("www.", curr_pos);
-	if (find2 != string::npos && (link_start == string::npos || find2 < link_start)) {
-		// ignore if it's not at the beginning or has no whitespace
-		if ((find2 - 1) >= 0 && isalnum(message[find2 - 1])) {
-			// do nothing
- 		} else if (isspace(message[find2 + 4]) || message[find2 + 4] == '.') {
-			// do nothing
-		} else {
-			link_start = find2;
-		}
-	}
-
-	find3 = message.find("ftp.", curr_pos);
-	if (find3 != string::npos && (link_start == string::npos || find3 < link_start)) {
-		// ignore if it's not at the beginning or has no whitespace
-		if ((find3 - 1) >= 0 && isalnum(message[find3 - 1])) {
-			// do nothing
- 		} else if (isspace(message[find3 + 4]) || message[find3 + 4] == '.') {
-			// do nothing
-		} else {
-			link_start = find3;
-		}
-	}
-
-	while (link_start != string::npos) {
-		// find whitespace or end
-		link_end = message.find_first_of(" \t\r\n", link_start);
-
-		if (link_end == string::npos) {
-			link_end = message.size() - 1;
-		}
-
-		// prune punctuation
-		while (link_start < link_end) {
-			if (message[link_end] == ',' || message[link_end] == '!' || message[link_end] == '.' || message[link_end] == ')' || message[link_end] == ';' || message[link_end] == ']' || message[link_end] == '>' || message[link_end] == '\'' || message[link_end] == '"') {
-				--link_end;
-			} else {
-				break;
-			}
-		}
-		
-		if (link_start < link_end) {
-			++link_count;
-		}
-		
-		curr_pos = link_end + 1;
-		
-		// find next link
-		link_start = message.find("http://", curr_pos);
-
-		find1 = message.find("ftp://", curr_pos);
-		if (find1 != string::npos && (link_start == string::npos || find1 < link_start)) {
-			link_start = find1;
-		}
-
-		find2 = message.find("www.", curr_pos);
-		if (find2 != string::npos && (link_start == string::npos || find2 < link_start)) {
-			// ignore if it's not at the beginning or has no whitespace
-			if ((find2 - 1) >= 0 && isalnum(message[find2 - 1])) {
-				// do nothing
-	 		} else if (isspace(message[find2 + 4]) || message[find2 + 4] == '.') {
-				// do nothing
-			} else {
-				link_start = find2;
-			}
-		}
-	
-		find3 = message.find("ftp.", curr_pos);
-		if (find3 != string::npos && (link_start == string::npos || find3 < link_start)) {
-			// ignore if it's not at the beginning or has no whitespace
-			if ((find3 - 1) >= 0 && isalnum(message[find3 - 1])) {
-				// do nothing
-	 		} else if (isspace(message[find3 + 4]) || message[find3 + 4] == '.') {
-				// do nothing
-			} else {
-				link_start = find3;
-			}
-		}
-	}
-
-	return link_count;
-}
-
-void ChatWindow::GenerateHyperlinkText(string message, text_run standard, text_run_array **tra) {
-	int link_count = CountHyperlinks(message);
-	string::size_type pos;
-	int link_index = 0;
-		
-	*tra = (text_run_array *)malloc(sizeof(text_run_array) + (sizeof(text_run) * (link_count * 2 + 1)));
-	(*tra)->count = link_count * 2 +1;
-	
-	(*tra)->runs[link_index].offset = 0;
-	(*tra)->runs[link_index].font = standard.font;
-	(*tra)->runs[link_index].color = standard.color;
-	link_index++;
-
-	// no links?
-	if (link_count == 0) 
-		return;
-	
-	
-		
-	string::size_type curr_pos = 0, link_start, link_end;
-
-	// find next link
-	link_start = message.find("http://", curr_pos);
-
-	pos = message.find("https://", curr_pos);
-	if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-		link_start = pos;
-	}	
-
-	pos = message.find("ftp://", curr_pos);
-	if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-		link_start = pos;
-	}
-
-	pos = message.find("www.", curr_pos);
-	if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-		// ignore if it's not at the beginning or has no whitespace
-		if ((pos - 1) >= 0 && isalnum(message[pos - 1])) {
-			// do nothing
- 		} else if (isspace(message[pos + 4]) || message[pos + 4] == '.') {
-			// do nothing
-		} else {
-			link_start = pos;
-		}
-	}
-
-	pos = message.find("ftp.", curr_pos);
-	if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-		// ignore if it's not at the beginning or has no whitespace
-		if ((pos - 1) >= 0 && isalnum(message[pos - 1])) {
-			// do nothing
- 		} else if (isspace(message[pos + 4]) || message[pos + 4] == '.') {
-			// do nothing
-		} else {
-			link_start = pos;
-		}
-	}
-			
-	while (link_start != string::npos) {
-		// find whitespace or end
-		link_end = message.find_first_of(" \t\r\n", link_start);
-
-		if (link_end == string::npos) {
-			link_end = message.size() - 1;
-		}
-
-		// prune punctuation
-		while (link_start < link_end) {
-			if (message[link_end] == ',' || message[link_end] == '!' || message[link_end] == '.' || message[link_end] == ')' || message[link_end] == ';' || message[link_end] == ']' || message[link_end] == '>' || message[link_end] == '?' || message[link_end] == '\'' || message[link_end] == '"') {
-				--link_end;
-			} else {
-				break;
-			}
-		}
-		
-		// add hyperlink
-		if (link_start < link_end) {
-			BFont thin(be_plain_font);
-			rgb_color light_blue = {0, 0, 192, 255};
-			
-			(*tra)->runs[link_index].offset = link_start;
-			(*tra)->runs[link_index].font = thin;
-			(*tra)->runs[link_index].color = light_blue;
-
-			(*tra)->runs[link_index + 1].offset = link_end + 1;
-			(*tra)->runs[link_index + 1].font = standard.font;
-			(*tra)->runs[link_index + 1].color = standard.color;
-		}
-		
-		curr_pos = link_end + 1;
-
-		if (curr_pos >= message.size()) {
-			break;
-		}
-		
-		// find next link
-		link_start = message.find("http://", curr_pos);
-
-		pos = message.find("https://", curr_pos);
-		if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-			link_start = pos;
-		}
-
-		pos = message.find("ftp://", curr_pos);
-		if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-			link_start = pos;
-		}
-
-		pos = message.find("www.", curr_pos);
-		if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-			// ignore if it's not at the beginning or has no whitespace
-			if ((pos - 1) >= 0 && isalnum(message[pos - 1])) {
-				// do nothing
-	 		} else if (isspace(message[pos + 4]) || message[pos + 4] == '.') {
-				// do nothing
-			} else {
-				link_start = pos;
-			}
-		}
-
-		pos = message.find("ftp.", curr_pos);
-		if (pos != string::npos && (link_start == string::npos || pos < link_start)) {
-			// ignore if it's not at the beginning or has no whitespace
-			if ((pos - 1) >= 0 && isalnum(message[pos - 1])) {
-				// do nothing
-	 		} else if (isspace(message[pos + 4]) || message[pos + 4] == '.') {
-				// do nothing
-			} else {
-				link_start = pos;
-			}
-		}
-
-		link_index += 2;
-	}
-}
-
-
 
 void
 ChatWindow::MessageReceived(BMessage *msg)
@@ -758,7 +481,6 @@ ChatWindow::MessageReceived(BMessage *msg)
 		
 		case JAB_CHAT_SENT:
 		{
-			//Lock();
 			const char *messageTextANSI = messageTextView->Text();
 			string messageTextSTL = string(messageTextANSI);
 			BString message = BString(messageTextANSI);
@@ -774,14 +496,12 @@ ChatWindow::MessageReceived(BMessage *msg)
 			else
 				jabber->SendMessage(BString(_user->JabberHandle().c_str()), message);
 
-			//Unlock();
 			break;
 		}
 		
 		case JAB_GROUP_CHATTER_ONLINE:
 		{
 			
-			// only for groupchat
 			if (_type != GROUP) {
 				break;
 			}
@@ -810,8 +530,6 @@ ChatWindow::MessageReceived(BMessage *msg)
 
 		case JAB_GROUP_CHATTER_OFFLINE:
 		{
-			
-			// only for groupchat
 			if (_type != GROUP) {
 				break;
 			}
