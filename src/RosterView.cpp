@@ -11,7 +11,11 @@
 #include <strings.h>
 
 RosterView::RosterView(BRect frame)
-	: BOutlineListView(frame, NULL, B_SINGLE_SELECTION_LIST, B_FOLLOW_ALL) {
+	:
+	BOutlineListView(frame, "Roster", B_SINGLE_SELECTION_LIST, B_FOLLOW_ALL)
+{
+	SetLowColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	SetHighColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 }
 
 RosterView::~RosterView() {

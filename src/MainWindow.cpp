@@ -344,7 +344,6 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fAddBuddy = new BMenuItem("Add Item...", new BMessage(JAB_OPEN_ADD_BUDDY_WINDOW));
 	fAddBuddy->SetShortcut('N', 0);
 	fPreferences = new BMenuItem("Preferences...", new BMessage(JAB_PREFERENCES));
-	fPreferences->SetEnabled(false);
 
 	fEdit = new BMenu("Roster");
 	fEdit->AddItem(fAddBuddy);
