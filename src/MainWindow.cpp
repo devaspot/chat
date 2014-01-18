@@ -1,22 +1,21 @@
-//////////////////////////////////////////////////
-// Haiku Chat [MainWindow.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Synrc Research Center s.r.o. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                John Blanco
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #include <InterfaceKit.h>
 #include <cstdio>
 #include <app/Application.h>
-#include <be_apps/Deskbar/Deskbar.h>
-#include <be_apps/NetPositive/NetPositive.h>
 #include <interface/MenuBar.h>
 #include <interface/MenuItem.h>
 #include <interface/ScrollView.h>
 #include <String.h>
-#include <Roster.h>
-#include <Path.h>
-#include <FindDirectory.h>
-#include <GridLayout.h>
 #include <LayoutBuilder.h>
-#include <ControlLook.h>
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -36,80 +35,40 @@
 #include "JRoster.h"
 
 #define SSL_ENABLED	'ssl3'
+#define BOX_WIDTH BSize(fUsername->StringWidth("w")*36, B_SIZE_UNSET)
 
-BlabberMainWindow *BlabberMainWindow::_instance = NULL;
+BlabberMainWindow* BlabberMainWindow::fInstance = NULL;
 
-BlabberMainWindow *BlabberMainWindow::Instance() {
-	BlabberSettings *settings = BlabberSettings::Instance();
-	
-	if (_instance == NULL && !settings->Data("no-window-on-startup")) 
-	{
-		float main_window_width, main_window_height;
-
-		// determine what the width and height of the window should be
-		if (settings->Data("main-window-width") && settings->Data("main-window-height"))
-		{
-			main_window_width  = atof(settings->Data("main-window-width"));
-			main_window_height = atof(settings->Data("main-window-height"));
-		} 
-		else {
-			// default
-			main_window_width  = 210;
-			main_window_height = 332; 
-		}
-		
-		// create window frame position
-		BRect frame(GenericFunctions::CenteredFrame(main_window_width, main_window_height));
-
-		// poition window to last known position
-		if (settings->Data("main-window-left") && settings->Data("main-window-top"))
-		{
-			frame.OffsetTo(BPoint(atof(settings->Data("main-window-left")), atof(settings->Data("main-window-top"))));
-		}
-
-		// create window singleton
-		_instance = new BlabberMainWindow(frame);
-	}
-	
-	return _instance;
-}
-
-BlabberMainWindow::~BlabberMainWindow() {
-	// remove self from message family
+BlabberMainWindow::~BlabberMainWindow()
+{
 	MessageRepeater::Instance()->RemoveTarget(this);
-
-	_instance = NULL;
+	fInstance = NULL;
 }
 
-void BlabberMainWindow::MessageReceived(BMessage *msg) {
+void
+BlabberMainWindow::MessageReceived(BMessage *msg)
+{
 	static bool reported_info = false;
 	
 	switch (msg->what) {
 
 		case JAB_CONNECT:
 		case JAB_LOGIN: {
-			// must pass validation
+
 			if (!ValidateLogin()) {
 				break;
 			}
 
-			// switch out views
 			HideLogin();
 			
-			UserID username(_login_username->Text());
+			UserID username(fUsername->Text());
 			
-			if (username.JabberServer() == "gmail.com" || 
-				username.JabberServer() == "googlemail.com")
-			{
-				jabber->SetConnection(BString("talk.google.com"), 443, true);
-			} else
-			{
-				jabber->SetConnection(BString(username.JabberServer().c_str()), 5223, true);
-			}
-			
+			if (username.JabberServer() == "gmail.com" || username.JabberServer() == "googlemail.com")
+				 jabber->SetConnection(BString("talk.google.com"), 443, true);
+			else jabber->SetConnection(BString(username.JabberServer().c_str()), 5223, true);
 				
 			jabber->SetCredentials(BString(username.JabberUsername().c_str()), 
-							BString(username.JabberServer().c_str()), BString(_login_password->Text()));
+							BString(username.JabberServer().c_str()), BString(fPassword->Text()));
 							
 			jabber->LogOn();
 			
@@ -120,8 +79,7 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		{
 			SetTitle((string("Chat − ") + UserID(string(jabber->jid.String())).JabberHandle()).c_str());
 			
-			
-			_status_view->SetMessage("gathering agents, roster and presence info");
+			fStatusView->SetMessage("gathering agents, roster and presence info");
 						
 			jabber->RequestRoster();
 			jabber->SendStorageRequest("storage", "storage:bookmarks");
@@ -141,12 +99,10 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 				jabber->SetStatus("online", os_info.c_str());
 			}
 				
-			BlabberSettings::Instance()->SetData("last-login", _login_username->Text());
-			BlabberSettings::Instance()->SetData("last-password", _login_password->Text());
-			BlabberSettings::Instance()->SetTag("auto-login", _login_auto_login->Value());
+			BlabberSettings::Instance()->SetData("last-login", fUsername->Text());
+			BlabberSettings::Instance()->SetData("last-password", fPassword->Text());
+			BlabberSettings::Instance()->SetTag("auto-login", fAutoLogin->Value());
 			BlabberSettings::Instance()->WriteToFile();
-			
-			
 
 			break;
 		}
@@ -158,7 +114,7 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 			SetTitle("Chat");
 			jabber->_storage_supported = true;
 			Lock();
-			_status_view->SetMessage("disconnect");
+			fStatusView->SetMessage("disconnect");
 			Unlock();
 			jabber->Disconnect();
 			
@@ -167,12 +123,9 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 
 		case BLAB_UPDATE_ROSTER:
 		{
-			// a message that the roster singleton was updated
 			Lock();
-			_status_view->SetMessage("roster updated.");
-			
-			_roster->UpdateRoster();
-			
+			fStatusView->SetMessage("roster updated.");
+			fRosterView->UpdateRoster();
 			Unlock();
 			break;
 		}
@@ -181,9 +134,8 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:
 		case JAB_OPEN_CHAT:
 		{
-			// if there's a current selection, begin chat with that user
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			
 			if (item != NULL) {
 				
@@ -210,14 +162,14 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		case JAB_SUBSCRIBE_PRESENCE:
 		{
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			
 			if (item != NULL) {
 				UserID *user = (UserID*)item->GetUserID();
 				jabber->SendSubscriptionRequest(user->JabberHandle());
 			}
 			Unlock();
-			_roster->UpdateRoster();
+			fRosterView->UpdateRoster();
 			break;
 		}
 		
@@ -225,7 +177,7 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		{
 			Lock();
 			fprintf(stderr, "Sending unsubscribe...");
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			
 			if (item != NULL) {
 				UserID *user = (UserID*)item->GetUserID();
@@ -234,35 +186,35 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 			
 			}
 			Unlock();
-			_roster->UpdateRoster();
+			fRosterView->UpdateRoster();
 			break;
 		}
 		
 		case JAB_REVOKE_PRESENCE:
 		{
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			
 			if (item != NULL) {
 				UserID *user = (UserID*)item->GetUserID();
 				jabber->RejectPresence(user->JabberHandle());
 			}
 			Unlock();
-			_roster->UpdateRoster();
+			fRosterView->UpdateRoster();
 			break;
 		}
 		
 		case JAB_RESEND_PRESENCE:
 		{
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			
 			if (item != NULL) {
 				UserID *user = (UserID*)item->GetUserID();
 				jabber->AcceptPresence(user->JabberHandle());
 			}
 			Unlock();
-			_roster->UpdateRoster();
+			fRosterView->UpdateRoster();
 			break;
 		}
 		case JAB_OPEN_ADD_BUDDY_WINDOW:
@@ -277,7 +229,7 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		case JAB_OPEN_EDIT_BUDDY_WINDOW:
 		{
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			if (item != NULL) {
 				UserID *user = const_cast<UserID *>(item->GetUserID());
 				BuddyWindow::Instance()->SetUser(user);
@@ -290,7 +242,7 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 		case JAB_REMOVE_BUDDY:
 		{
 			Lock();
-			RosterItem *item = _roster->CurrentItemSelection();
+			RosterItem *item = fRosterView->CurrentItemSelection();
 			UserID *user = NULL;
 			
 			if (item != NULL)
@@ -302,8 +254,8 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 					JRoster::Instance()->Lock();
 					JRoster::Instance()->RemoveUser(user);
 					JRoster::Instance()->Unlock();
-					_roster->RemoveItem(item);
-					_roster->Invalidate();
+					fRosterView->RemoveItem(item);
+					fRosterView->Invalidate();
 					jabber->SaveConference(NULL);
 					jabber->SendStorageRequest("storage", "storage:bookmarks");
 				}
@@ -312,13 +264,6 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 				
 			}
 			Unlock();
-			break;
-		}
-		
-		case SSL_ENABLED:
-		{
-			//_ssl_port->SetEnabled(_ssl_enabled->Value());
-			//_ssl_server->SetEnabled(_ssl_enabled->Value());
 			break;
 		}
 		
@@ -342,261 +287,186 @@ void BlabberMainWindow::MessageReceived(BMessage *msg) {
 	}
 }
 
-void BlabberMainWindow::MenusBeginning() {
+void
+BlabberMainWindow::MenusBeginning()
+{
 	char buffer[1024];
-
-	// FILE menu
-	if (!_full_view->IsHidden()) {
-		_connect_item->SetEnabled(false);
-		_disconnect_item->SetEnabled(true);
+	if (!fMainView->IsHidden()) {
+		fDisconnect->SetEnabled(true);
 	} else {
-		_connect_item->SetEnabled(true);
-		_disconnect_item->SetEnabled(false);
+		fDisconnect->SetEnabled(false);
 	}
-
 }
 
-bool BlabberMainWindow::QuitRequested() {
-	
-	// remember last coordinates
+bool
+BlabberMainWindow::QuitRequested()
+{
 	BlabberSettings::Instance()->SetFloatData("main-window-left", Frame().left);
 	BlabberSettings::Instance()->SetFloatData("main-window-top", Frame().top);
 	BlabberSettings::Instance()->SetFloatData("main-window-width", Bounds().Width());
 	BlabberSettings::Instance()->SetFloatData("main-window-height", Bounds().Height());
-	
-	// save login settings
-	BlabberSettings::Instance()->SetData("last-login", _login_username->Text());
-	BlabberSettings::Instance()->SetData("last-password", _login_password->Text());
-	BlabberSettings::Instance()->SetTag("auto-login", _login_auto_login->Value());
-			
+	BlabberSettings::Instance()->SetData("last-login", fUsername->Text());
+	BlabberSettings::Instance()->SetData("last-password", fPassword->Text());
+	BlabberSettings::Instance()->SetTag("auto-login", fAutoLogin->Value());
 	BlabberSettings::Instance()->WriteToFile();
-
 	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
 }
 
+void
+BlabberMainWindow::FrameResized(float width, float height)
+{
+	fUsername->Invalidate();
+}
+
+
+
 BlabberMainWindow::BlabberMainWindow(BRect frame)
-	: BWindow(frame, "Chat", B_DOCUMENT_WINDOW, B_ASYNCHRONOUS_CONTROLS) {
-
-
-	MessageRepeater::Instance()->AddTarget(this);
-
-	// set size constraints
-	SetSizeLimits(300, 3000, 300, 3000);
-
-	BRect rect;
-
-	// encompassing view
-	rect = Bounds();
-	rect.OffsetTo(B_ORIGIN);
+	:
+	BWindow(frame, "Chat", B_DOCUMENT_WINDOW, 
+						   B_ASYNCHRONOUS_CONTROLS)
+{
+	fDisconnect = new BMenuItem("Sign-out", new BMessage(JAB_DISCONNECT));
+	fDisconnect->SetShortcut('B', 0);
+	fAbout = new BMenuItem("About...", new BMessage(B_ABOUT_REQUESTED));
+	fAbout->SetTarget(be_app);
+	fQuit = new BMenuItem("Quit", new BMessage(JAB_QUIT));
+	fQuit->SetShortcut('Q', 0);
 	
-	_full_view = new BView(rect, "main-full", B_FOLLOW_ALL, B_WILL_DRAW);
-	_full_view->SetViewColor(216, 216, 216, 255);
+	fFile = new BMenu("File");
+	fFile->AddItem(fDisconnect);
+	fFile->AddSeparatorItem();
+	fFile->AddItem(fAbout);
+	fFile->AddSeparatorItem();
+	fFile->AddItem(fQuit);
+	fFile->SetTargetForItems(MessageRepeater::Instance());
 
-	// status bar
-	_status_view = new StatusView();
-	_status_view->SetViewColor(216, 216, 216, 255);
-	_status_view->SetLowColor(216, 216, 216, 255);
+	fAddBuddy = new BMenuItem("Add Item...", new BMessage(JAB_OPEN_ADD_BUDDY_WINDOW));
+	fAddBuddy->SetShortcut('N', 0);
+	fPreferences = new BMenuItem("Preferences...", new BMessage(JAB_PREFERENCES));
+	fPreferences->SetEnabled(false);
+
+	fEdit = new BMenu("Roster");
+	fEdit->AddItem(fAddBuddy);
+	fEdit->AddSeparatorItem();
+	fEdit->AddItem(fPreferences);
+	fEdit->SetTargetForItems(this);
 	
-	// menubar
-	rect = Bounds();
-	rect.bottom = rect.top + 18;
+	fMainView = new BView(Bounds(), "main-full", B_FOLLOW_ALL, B_WILL_DRAW);
+	fMainView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	AddChild(fMainView);
 
-	_menubar = new BMenuBar(rect, "menubar");
+	fMenuBar = new BMenuBar(Bounds(),"menubar");
+	fMenuBar->AddItem(fFile);
+	fMenuBar->AddItem(fEdit);
+	fMainView->AddChild(fMenuBar);
 
-	// FILE MENU
-	_file_menu = new BMenu("File");
-
-		_disconnect_item = new BMenuItem("Sign-out", new BMessage(JAB_DISCONNECT));
-		_disconnect_item->SetShortcut('B', 0);
-
-		_about_item = new BMenuItem("About...", new BMessage(B_ABOUT_REQUESTED));
-		_about_item->SetTarget(be_app);
-
-		_quit_item = new BMenuItem("Quit", new BMessage(JAB_QUIT));
-		_quit_item->SetShortcut('Q', 0);
-
-	_file_menu->AddItem(_disconnect_item);
-	_file_menu->AddSeparatorItem();
-	_file_menu->AddItem(_about_item);
-	_file_menu->AddSeparatorItem();
-	_file_menu->AddItem(_quit_item);
-	_file_menu->SetTargetForItems(MessageRepeater::Instance());
-
-	// EDIT MENU
-	_edit_menu = new BMenu("Roster");
-
-		_add_buddy_item = new BMenuItem("Add Item...", new BMessage(JAB_OPEN_ADD_BUDDY_WINDOW));
-		_add_buddy_item->SetShortcut('N', 0);
-
-		_preferences_item = new BMenuItem("Preferences...", new BMessage(JAB_PREFERENCES));
-		_preferences_item->SetEnabled(false);
-
-	_edit_menu->AddItem(_add_buddy_item);
-	_edit_menu->AddSeparatorItem();
-	_edit_menu->AddItem(_preferences_item);
-	_edit_menu->SetTargetForItems(this);
-
-	_menubar->AddItem(_file_menu);
-	_menubar->AddItem(_edit_menu);
-
-	// tabbed view
-	rect = Bounds();
-	rect.top = _menubar->Bounds().bottom + 1 ;
+	fStatusView = new StatusView();
+	fStatusView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	fStatusView->SetLowColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	fMainView->AddChild(fStatusView);
+	
+	BRect rect = Bounds();
+	rect.top = fMenuBar->Frame().Height()+1;
 	rect.bottom -= B_H_SCROLL_BAR_HEIGHT;
-
-	// roster view
-	rect.right  -= B_V_SCROLL_BAR_WIDTH;	
-
-	_roster          = new RosterView(rect);
-	_roster_scroller = new BScrollView(NULL, _roster, B_FOLLOW_ALL_SIDES, 0, false, true);
-	_roster->TargetedByScrollView(_roster_scroller);
-
-	// chat service
-	rect.OffsetBy(7.0, _roster_scroller->Bounds().Height());
-	rect.bottom = rect.top + 18;
-
-	_full_view->AddChild(_status_view);
-	_full_view->AddChild(_menubar);
-	_full_view->AddChild(_roster_scroller);
-
-	AddChild(_full_view);
+	rect.right -= B_V_SCROLL_BAR_WIDTH;
+	fRosterView = new RosterView(rect);
+	fRosterScroller = new BScrollView("scroller", fRosterView, B_FOLLOW_ALL_SIDES, 0, false, true);
+	fRosterView->TargetedByScrollView(fRosterScroller);
+	fMainView->AddChild(fRosterScroller);
 	
-	// encompassing view
-	rect = Bounds();
-	rect.OffsetTo(B_ORIGIN);
+	fUsername = new BTextControl("JID: ", "", NULL);
+	fUsername->SetEnabled(true);
+	fPassword = new BTextControl("Password: ", "", NULL);
+	fPassword->TextView()->HideTyping(true);
+	fNewAccount = new BCheckBox(Bounds(), NULL, "Register Account", NULL, B_FOLLOW_LEFT);
+	fNewAccount->SetEnabled(true);
+	fAutoLogin = new BCheckBox(Bounds(), NULL, "Auto-login", NULL, B_FOLLOW_LEFT);
+	fLogin = new BButton(Bounds(), "login", "Sign-in", new BMessage(JAB_LOGIN), B_FOLLOW_RIGHT | B_FOLLOW_BOTTOM);
+	fLogin->MakeDefault(false);
+	fLogin->SetTarget(this);
 
-	_login_full_view = new BGridView("login-full", B_USE_DEFAULT_SPACING, B_USE_DEFAULT_SPACING); 
-					   // new BView(rect, "login-full", B_FOLLOW_ALL, B_WILL_DRAW);
-	_login_full_view->SetViewColor(216, 216, 216, 255);
+	fLoginView = new BView(Bounds(), "login-full", B_FOLLOW_ALL, B_WILL_DRAW);
+	fLoginView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	AddChild(fLoginView);
 	
-	float spacing = be_control_look->DefaultItemSpacing();
-	BGridLayout* layout = _login_full_view->GridLayout();
-	layout->SetInsets(spacing, spacing, spacing, spacing);
+	BLayoutItem* fUsernameBox = fUsername->CreateTextViewLayoutItem();
+	fUsernameBox->SetExplicitMinSize(BOX_WIDTH);
 	
-	
-	// username/password controls
-	rect.InsetBy(5.0, 5.0);
-	rect.top = 77.0;
-	rect.right -= 3.0;
-	
-	
-	_login_realname = new BTextControl(rect, NULL, "Title Name: ", NULL, NULL, B_FOLLOW_LEFT_RIGHT);
-	
-	rect.OffsetBy(0.0, 21.0); //fix this is too static!
-	
-	_login_username = new BTextControl(rect, NULL, "JID: ", NULL, NULL, B_FOLLOW_LEFT_RIGHT);
-	_login_username->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
-		
-	rect.OffsetBy(0.0, 21.0); //fix this is too static!
-	
-	_login_password = new BTextControl(rect, NULL, "Password: ", NULL, NULL, B_FOLLOW_LEFT_RIGHT);
-	_login_password->TextView()->HideTyping(true);
-	_login_password->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
-	
-	_login_realname->SetDivider(80);
-	_login_username->SetDivider(80);
-	_login_password->SetDivider(80);
-	
-	rect.OffsetBy(80.0, 25.0);
-	
-	rect.right = rect.left + 175.0;
-	rect.bottom = rect.top + 19.0;
-	_login_new_account = new BCheckBox(rect, NULL, "Register Account", NULL, B_FOLLOW_LEFT);
-	_login_new_account->SetEnabled(true);
+	BLayoutBuilder::Group<>(fLoginView, B_VERTICAL, 0)
+		.SetInsets(B_USE_DEFAULT_SPACING)
+		.AddGlue()
+		.AddGrid(B_USE_DEFAULT_SPACING, B_USE_SMALL_SPACING)
+			.Add(fUsername->CreateLabelLayoutItem(), 0, 0)
+			.Add(fUsername->CreateTextViewLayoutItem(), 1, 0)
+			.Add(fPassword->CreateLabelLayoutItem(), 0, 1)
+			.Add(fPassword->CreateTextViewLayoutItem(), 1, 1)
+			.Add(fNewAccount, 1, 2, 2, 1)
+			.Add(fAutoLogin, 1, 3, 2, 1)
+		.End()
+		.AddGlue()
+		.AddGroup(B_HORIZONTAL)
+			.AddGlue()
+			.Add(fLogin)
+		.End()
+		.AddGlue()
+		.View();
 
-	rect.OffsetBy(0.0, 19.0);
-	_login_auto_login = new BCheckBox(rect, NULL, "Auto-login", NULL, B_FOLLOW_LEFT);
-//	_login_auto_login->SetEnabled(false);
+	fLoginView->Hide();
+	fMainView->Hide();
 
-	rect.OffsetTo(Bounds().Width() - 130.0, Bounds().Height() - 60.0);
-	rect.right = rect.left + 100.0;
-
-	_login_login = new BButton(rect, "login", "Sign-in", new BMessage(JAB_LOGIN), B_FOLLOW_RIGHT | B_FOLLOW_BOTTOM);
-	_login_login->MakeDefault(false);
-	_login_login->SetTarget(this);
-
-	// new user notes
-	rect.Set(0, rect.top + 32.0, Bounds().Width(), rect.top + 102.0); 
-	rect.InsetBy(5.0, 0.0);
-
-	//rgb_color note = {0, 0, 0, 255};
-	BFont black_9(be_plain_font);
-	black_9.SetSize(9.0);
-
-	BRect text_rect(rect);
-	text_rect.OffsetTo(B_ORIGIN);
-
-	// login always hidden at start
-	_login_full_view->Hide();
-
-//	_login_full_view->AddChild(_login_username);
-//	_login_full_view->AddChild(_login_password);
-//	_login_full_view->AddChild(_login_new_account);
-//	_login_full_view->AddChild(_login_auto_login);
-//	_login_full_view->AddChild(_login_login);
+	if (!BlabberSettings::Instance()->Data("last-login")) fUsername->SetText("kernel_joe@gjabber.org");
+	else fUsername->SetText(BlabberSettings::Instance()->Data("last-login"));
 	
-	layout->AddView(_login_username,1,1);
-	layout->AddView(_login_password,1,2);
-	layout->AddView(_login_new_account,1,3);
-	layout->AddView(_login_auto_login,1,4);
-	layout->AddView(_login_login,1,5);
-
-	BLayoutBuilder::Group<>(this,B_HORIZONTAL,0).SetInsets(0,0,0,0).Add(_login_full_view);
-	//AddChild(_login_full_view);
-	
-
-	if (BlabberSettings::Instance()->Data("last-login")) {
-		_login_username->SetText(BlabberSettings::Instance()->Data("last-login"));
-	} else {
-		_login_username->SetText("masique@gmail.com");
-	}
-	
-	_login_password->SetText(BlabberSettings::Instance()->Data("last-password"));
-	_login_auto_login->SetValue(BlabberSettings::Instance()->Tag("auto-login"));
-	_login_password->MakeFocus(true);
+	fPassword->SetText(BlabberSettings::Instance()->Data("last-password"));
+	fAutoLogin->SetValue(BlabberSettings::Instance()->Tag("auto-login"));
+	fPassword->MakeFocus(true);
 	
 	ShowLogin();
+	
+	MessageRepeater::Instance()->AddTarget(this);
 	
 }
 
 bool BlabberMainWindow::ValidateLogin() {
 	// existance of username
-	if (!strcmp(_login_username->Text(), "")) {
-		ModalAlertFactory::Alert("Wait, you haven't specified your Jabber ID yet.\n(e.g. me@jabber.org)", "Doh!", NULL, NULL, B_WIDTH_FROM_LABEL, B_STOP_ALERT);
-		_login_username->MakeFocus(true);
+	if (!strcmp(fUsername->Text(), "")) {
+		ModalAlertFactory::Alert("Wait, you haven't specified your Jabber ID yet.\n(e.g. me@jabber.org)",
+								 "Doh!", NULL, NULL, B_WIDTH_FROM_LABEL, B_STOP_ALERT);
+		fUsername->MakeFocus(true);
 
 		return false;
 	}
 
 	// validity of username
-	UserID username(_login_username->Text());
+	UserID username(fUsername->Text());
 
 	if (username.WhyNotValidJabberHandle().size()) {
 		char buffer[1024];
 		
-		if (_login_new_account->Value())
+		if (fNewAccount->Value())
 			sprintf(buffer, "The Jabber ID you specified is not legal for the following reason:\n\n%s\n\nYou must specify a legal Jabber ID before you may create a new account.", username.WhyNotValidJabberHandle().c_str());
 		else
 			sprintf(buffer, "The Jabber ID you specified must not be yours because it's invalid for the following reason:\n\n%s\n\nIf you can't remember it, it's OK to create a new one by checking the \"Create a new Jabber Account!\" box.", username.WhyNotValidJabberHandle().c_str());
 
 		ModalAlertFactory::Alert(buffer, "OK", NULL, NULL, B_WIDTH_FROM_LABEL, B_STOP_ALERT);
-		_login_username->MakeFocus(true);
+		fUsername->MakeFocus(true);
 
 		return false;
 	}	
 
-	// 	existance of password
-	if (!strcmp(_login_password->Text(), "")) {
+	if (!strcmp(fPassword->Text(), "")) {
 		char buffer[1024];
 
-		if (_login_new_account->Value())
-			sprintf(buffer, "To create a new account, you must specify a password to protect it, %s.", username.Handle().c_str());
+		if (fNewAccount->Value())
+			sprintf(buffer, "To create a new account, you must specify a password to protect it, %s.",
+					 username.Handle().c_str());
 		else
-			sprintf(buffer, "You must specify a password so I can make sure it's you, %s.", username.Handle().c_str());
+			sprintf(buffer, "You must specify a password so I can make sure it's you, %s.", 
+					 username.Handle().c_str());
 
 		ModalAlertFactory::Alert(buffer, "Sorry!", NULL, NULL, B_WIDTH_FROM_LABEL, B_STOP_ALERT);
-		_login_password->MakeFocus(true);
+		fPassword->MakeFocus(true);
 
 		return false;
 	}
@@ -604,32 +474,55 @@ bool BlabberMainWindow::ValidateLogin() {
 	return true;
 }
 
-void BlabberMainWindow::ShowLogin() {
-	SetSizeLimits(300, 3000, 300, 3000);
-	_login_login->MakeDefault(true);
-	_full_view->Hide();
-	_full_view->Hide();
-	_login_full_view->Show();
-	_login_full_view->Show();
-	_login_new_account->SetValue(B_CONTROL_OFF);
+BlabberMainWindow*
+BlabberMainWindow::Instance()
+{
+	BlabberSettings *settings = BlabberSettings::Instance();
+	
+	if (fInstance == NULL && !settings->Data("no-window-on-startup")) 
+	{
+		float main_window_width, main_window_height;
+
+		if (settings->Data("main-window-width") && settings->Data("main-window-height"))
+		{
+			main_window_width  = atof(settings->Data("main-window-width"));
+			main_window_height = atof(settings->Data("main-window-height"));
+		} 
+		else
+		{
+			main_window_width  = 210;
+			main_window_height = 332; 
+		}
+		
+		BRect frame(GenericFunctions::CenteredFrame(main_window_width, main_window_height));
+
+		if (settings->Data("main-window-left") && settings->Data("main-window-top"))
+		{
+			frame.OffsetTo(BPoint(atof(settings->Data("main-window-left")),
+									atof(settings->Data("main-window-top"))));
+		}
+
+		fInstance = new BlabberMainWindow(frame);
+	}
+	
+	return fInstance;
 }
 
-void BlabberMainWindow::HideLogin()
+void
+BlabberMainWindow::ShowLogin()
+{
+	int width = ceilf(BOX_WIDTH.width*1.35);
+	SetSizeLimits(width, width, 250, 250);
+	fLogin->MakeDefault(true);
+	fMainView->Hide();
+	fLoginView->Show();
+}
+
+void
+BlabberMainWindow::HideLogin()
 {
 	SetSizeLimits(100, 3000, 200, 3000);
-	_login_login->MakeDefault(false);
-	_full_view->Show();
-	_full_view->Show();
-	_login_full_view->Hide();
-	_login_full_view->Hide();
-}
-
-void BlabberMainWindow::SetCustomStatus(string status) {
-	char buffer[2048];
-	
-	// create menued status message
-	sprintf(buffer, "%s", status.c_str()); 
-
-	_custom_item->SetMarked(true);
-	_custom_item->SetLabel(buffer);
+	fLogin->MakeDefault(false);
+	while (fMainView->IsHidden()) fMainView->Show();
+	while (!fLoginView->IsHidden()) fLoginView->Hide();
 }

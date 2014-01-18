@@ -311,7 +311,7 @@ JabberProtocol::OnTag(XMLEntity *entity)
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "stream:features"))
 	{
 		mainWindow->Lock();
-		int wantRegister = mainWindow->_login_new_account->Value();
+		int wantRegister = mainWindow->fNewAccount->Value();
 		mainWindow->Unlock();
 		
 		if (wantRegister == B_CONTROL_ON)
@@ -319,7 +319,7 @@ JabberProtocol::OnTag(XMLEntity *entity)
 			if (entity->Child("register"))
 			{
 				mainWindow->Lock();
-				mainWindow->_login_new_account->SetValue(B_CONTROL_OFF);
+				mainWindow->fNewAccount->SetValue(B_CONTROL_OFF);
 				mainWindow->Unlock();
 				
 				SendUserRegistration(user, pass, "haiku");
@@ -452,12 +452,12 @@ JabberProtocol::SaveConference(UserID *conference)
 		
 
 			
-	int count = mainWindow->_roster->GetConferencesCount();
+	int count = mainWindow->fRosterView->GetConferencesCount();
 	bool seen = false;
 	
 	for (int i = 0; i < count; i++)
 	{
-		const UserID *conf = mainWindow->_roster->GetConference(i);
+		const UserID *conf = mainWindow->fRosterView->GetConference(i);
 		
 		if (conference && (conf->JabberHandle() == conference->JabberHandle()))
 		{
