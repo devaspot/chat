@@ -10,6 +10,7 @@
 #include "ChatWindow.h"
 #include "ChatTextView.h"
 #include "SplitView.h"
+#include <SplitView.h>
 #include "StatusView.h"
 #include "Settings.h"
 #include "Messages.h"
@@ -452,12 +453,12 @@ ChatWindow::MessageReceived(BMessage *msg)
 {
 	switch (msg->what)
 	{
-		case JAB_PREFERENCES: {
+		case JAB_PREFERENCES:
 			jabber->RequestRoomOptions(BString(_group_room.c_str()));
 			break;
-		}
 		
-		case JAB_PREFERENCES_DATAFORM: {
+		case JAB_PREFERENCES_DATAFORM:
+		{
 			XMLEntity *entity = NULL;
 			msg->FindPointer("XMLEntity", (void **)&entity);
 			
@@ -465,19 +466,16 @@ ChatWindow::MessageReceived(BMessage *msg)
 			
 			DataForm *dataForm = new DataForm(frame);
 			dataForm->LoadDataForm(entity);
-			
+		}	
 			break;
-		}
 		
-		case JAB_CLOSE_CHAT: {
+		case JAB_CLOSE_CHAT:
 			PostMessage(B_QUIT_REQUESTED);
 			break;
-		}
 		
-		case JAB_CLOSE_TALKS: {
+		case JAB_CLOSE_TALKS:
 			PostMessage(B_QUIT_REQUESTED);
 			break;
-		}
 		
 		case JAB_CHAT_SENT:
 		{
@@ -495,16 +493,11 @@ ChatWindow::MessageReceived(BMessage *msg)
 				jabber->SendGroupchatMessage(BString(_user->JabberHandle().c_str()), message);
 			else
 				jabber->SendMessage(BString(_user->JabberHandle().c_str()), message);
-
-			break;
 		}
+			break;
 		
 		case JAB_GROUP_CHATTER_ONLINE:
-		{
-			
-			if (_type != GROUP) {
-				break;
-			}
+			if (_type != GROUP) break;
 			
 			if (GetGroupRoom() == string(msg->FindString("room")))
 			{
@@ -524,26 +517,16 @@ ChatWindow::MessageReceived(BMessage *msg)
 					string(msg->FindString("affiliation")));
 				
 			}
-
 			break;
-		}
 
 		case JAB_GROUP_CHATTER_OFFLINE:
-		{
-			if (_type != GROUP) {
-				break;
-			}
-
+			if (_type != GROUP) break;
 			RemoveGroupChatter(string(msg->FindString("username")));
-			
 			break;
-		}
 	
 		default:
-		{
 			BWindow::MessageReceived(msg);
 			break;
-		}
 	}
 }
 
