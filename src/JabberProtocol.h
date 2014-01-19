@@ -10,15 +10,15 @@
 #ifndef JABBER_PROTOCOL_H
 #define JABBER_PROTOCOL_H
 
-#include "SecureSocket.h"
-#include "XMLReader.h"
-#include "UserID.h"
-
 #include <OS.h>
 #include <String.h>
 #include <string.h>
 #include <Locker.h>
 #include <Message.h>
+
+#include "SecureSocket.h"
+#include "XMLReader.h"
+#include "UserID.h"
 
 enum JabberMessages { PORT_TALKER_DATA = 0x68374920 };
 
@@ -29,18 +29,16 @@ class JabberProtocol : public XMLReader
 {
 	public:
 	
-								enum iq_intent {
-									LOGIN,
-									ROSTER,
-									AGENTS,
-									REGISTER,
-									SEND_REGISTER,
-									UNREGISTER,
-									SEND_UNREGISTER,
-									NEW_USER,
-									MESSAGE,
-									CHAT
-								};
+               enum iq_intent { LOGIN,
+								ROSTER,
+								AGENTS,
+								REGISTER,
+								SEND_REGISTER,
+								UNREGISTER,
+								SEND_UNREGISTER,
+								NEW_USER,
+								MESSAGE,
+								CHAT };
 
 								JabberProtocol();
 								~JabberProtocol();
@@ -117,4 +115,4 @@ class JabberProtocol : public XMLReader
 
 };
 
-#endif // _H
+#endif

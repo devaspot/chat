@@ -3,6 +3,7 @@
  * Distributed under the terms of the MIT license.
  *
  * Authors:
+ *				  John Blanco
  *                Maxim Sokhatsky <maxim@synrc.com>
  *
  */

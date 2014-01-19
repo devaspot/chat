@@ -10,14 +10,13 @@
 #ifndef BUDDY_WINDOW_H
 #define BUDDY_WINDOW_H
 
-#include <interface/Box.h>
-#include <interface/Button.h>
-#include <interface/MenuField.h>
-#include <interface/MenuItem.h>
-#include <interface/PopUpMenu.h>
-#include <interface/TextControl.h>
-#include <interface/View.h>
-#include <interface/Window.h>
+#include <Box.h>
+#include <Button.h>
+#include <MenuField.h>
+#include <PopUpMenu.h>
+#include <TextControl.h>
+#include <View.h>
+#include <Window.h>
 #include "UserID.h"
 
 class BuddyWindow : public BWindow

@@ -1,8 +1,12 @@
-//////////////////////////////////////////////////
-// Haiku Chat [JRoster.h]
-//     The official JRoster repository
-//////////////////////////////////////////////////
-
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
+ 
 #ifndef JROSTER_H
 #define JROSTER_H
 

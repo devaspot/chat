@@ -1,15 +1,26 @@
-//////////////////////////////////////////////////
-// Haiku Chat [PeopleListItem.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
+#include <Font.h>
+#include <View.h>
 #include "PeopleListItem.h"
-#include <interface/Font.h>
-#include <interface/View.h>
 #include "JabberProtocol.h"
 
-PeopleListItem::PeopleListItem(std::string whoami, std::string user,
-	std::string show, std::string status, std::string role, std::string affiliation)
-	: BListItem()
+PeopleListItem::PeopleListItem(
+	std::string whoami,
+	std::string user,
+	std::string show,
+	std::string status,
+	std::string role,
+	std::string affiliation)
+	:
+	BListItem()
 {
 	_user   = user;
 	_whoami = whoami;
@@ -24,67 +35,58 @@ PeopleListItem::~PeopleListItem() {
 
 void PeopleListItem::DrawItem(BView *owner, BRect frame, bool complete)
 {
-	// text characteristics
+	font_height fh;
+	
 	owner->SetFont(be_plain_font);
 	owner->SetFontSize(11.0);
-	
-	// construct text positioning
-	font_height fh;
 	owner->GetFontHeight(&fh);
 	
-	// clear rectangle
 	if (IsSelected())
 	{
-		// font color is based on online status
-		if (_show == "xa") 		  owner->SetHighColor(255, 220, 220, 255);
+		if 		(_show == "xa")	  owner->SetHighColor(255, 220, 220, 255);
 		else if (_show == "away") owner->SetHighColor(255, 230, 210, 255); 
 		else if (_show == "dnd")  owner->SetHighColor(255, 192, 192, 255); 
 		else 					  owner->SetHighColor(192, 255, 192, 255); 
-		owner->SetLowColor(owner->HighColor());
-
-	} else {
+	}
+	else
+	{
 		owner->SetHighColor(owner->ViewColor());
-		owner->SetLowColor(owner->HighColor());
 	}
 	
+	owner->SetLowColor(owner->HighColor());
 	owner->FillRect(frame);
-
-	float height = fh.ascent + fh.descent;
-	
 	owner->SetHighColor(90, 90, 90, 255);
 	
 	std::string sign = "";
 	int sign_offset = 0;
 	
-	if (_affiliation == "owner")
-		sign = "!!!";
-	else if (_affiliation == "admin")
-		sign = "@";
-	else if (_affiliation == "member")
-		sign = "+";
+	if 		(_affiliation == "owner")		sign = "!!!";
+	else if (_affiliation == "admin")		sign = "@";
+	else if (_affiliation == "member")		sign = "+";
 	else if (_affiliation == "none")
 	{
-		if (_role == "admin")
-			sign = "@";
-		else if (_role == "moderator")
-			sign = "@";
-		else if (_role == "participant")
-			sign = "+";
-		else 
-			sign = "";
+		if 		(_role == "admin")			sign = "@";
+		else if (_role == "moderator")		sign = "@";
+		else if (_role == "participant")	sign = "+";
+		else 								sign = "";
 	}
-	owner->DrawString(sign.c_str(), BPoint(frame.left, frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
 	
-	// standard text color
-	if (_show == "xa") 		   owner->SetHighColor(139, 0, 0, 255);
+	float height = fh.ascent + fh.descent;
+
+	owner->
+		DrawString(
+			sign.c_str(),
+			BPoint(frame.left, frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
+	
+	if 		(_show == "xa")	   owner->SetHighColor(139, 0, 0, 255);
 	else if (_show == "away")  owner->SetHighColor(255, 140, 0, 255);
 	else if (_show == "dnd")   owner->SetHighColor(255, 0, 0, 255);
 	else					   owner->SetHighColor(0, 100, 0, 255);
 
-	// draw information
-	
-	owner->DrawString(User().c_str(),
-		BPoint(frame.left + 12.0, frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
+	owner->
+		DrawString(
+			User().c_str(),
+			BPoint(frame.left + 12.0, frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
 	
 	if (!_status.empty())
 	{
@@ -96,13 +98,15 @@ void PeopleListItem::DrawItem(BView *owner, BRect frame, bool complete)
 	}
 }
 
-void PeopleListItem::Update(BView *owner, const BFont *font) {
+void
+PeopleListItem::Update(BView *owner, const BFont *font)
+{
 	BListItem::Update(owner, font);
-
-	// set height to accomodate graphics and text
 	SetHeight(13.0);
 }
 
-std::string PeopleListItem::User() const {
+std::string
+PeopleListItem::User() const
+{
 	return _user;
 }

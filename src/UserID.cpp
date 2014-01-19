@@ -1,6 +1,11 @@
-//////////////////////////////////////////////////
-// Blabber [UserID.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #include <algorithm>
 #include <string>

@@ -1,8 +1,11 @@
-//////////////////////////////////////////////////
-// Haiku Chat [UserID.h]
-//     Encapsulates user data for any account,
-//     Jabber or otherwise.
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #ifndef USER_ID_H
 #define USER_ID_H
