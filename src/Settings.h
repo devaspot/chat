@@ -1,28 +1,33 @@
-//////////////////////////////////////////////////
-// Haiku Chat [BlabberSettings.h]
-//     "Singleton" object that reads application settings for Blabber.
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #ifndef BLABBER_SETTINGS_H
 #define BLABBER_SETTINGS_H
 
-#ifndef FILE_XML_READER_H
-	#include "FileXMLReader.h"
-#endif
+#include "FileXMLReader.h"
 
 class BlabberSettings : public FileXMLReader {
+	
 public:
-	static BlabberSettings  *Instance();	
-	                        ~BlabberSettings();
+	
+	static	BlabberSettings*	Instance();	
+	                        	~BlabberSettings();
 
 protected:
-	                         BlabberSettings(const char *filename);
+
+	                         	BlabberSettings(const char *filename);
 	
 private:
-	// "Singleton" pattern's only instance of class
-	static BlabberSettings *_instance;
-	
-	void SetDefaultTagsValue();
+
+	static	BlabberSettings*	_instance;
+			void				SetDefaultTagsValue();
+			
 };
 
 #endif

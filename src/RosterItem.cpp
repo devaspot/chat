@@ -1,39 +1,40 @@
-//////////////////////////////////////////////////
-// Haiku Chat [RosterItem.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #include "RosterItem.h"
-#include "AppLocation.h"
 #include <TranslationUtils.h>
 
 RosterItem::RosterItem(UserID *userid)
-	: BStringItem(userid->FriendlyName().c_str()) {
+	:
+	BStringItem(userid->FriendlyName().c_str())
+{
 	_userid           = userid;
 	_is_stale_pointer = false;
 }
 
-RosterItem::~RosterItem() {
+RosterItem::~RosterItem()
+{
 }
 
-void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
+void
+RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 {
-	// protection
-	if (StalePointer()) {
-		return;
-	}
+	if (StalePointer()) return;
 
-	// get online status
 	UserID::online_status status = _userid->OnlineStatus();
 	std::string exact_status = _userid->ExactOnlineStatus();
 
-	// text characteristics
 	owner->SetFont(be_plain_font);
 	owner->SetFontSize(11);
 	
-	// clear rectangle
 	if (IsSelected())
 	{
-		// font color is based on online status
 		if (status == UserID::ONLINE)
 		{
 			if (exact_status == "xa") 		 owner->SetHighColor(255, 220, 220, 255);
@@ -59,7 +60,6 @@ void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 
 	float height;
 
-	// construct name
 	std::string name = GetUserID()->FriendlyName();
 
 	if (name.empty()) {
@@ -72,7 +72,6 @@ void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 
 	BFont statusFont;
 			
-	// font color is based on online status
 	if (status == UserID::ONLINE)
 	{
 		if (exact_status == "xa") 			owner->SetHighColor(139, 0, 0, 255);
@@ -89,18 +88,17 @@ void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 		owner->SetHighColor(0, 0, 255, 255); // blue
 	}
 
-	// construct text positioning
 	font_height fh;
 	owner->GetFontHeight(&fh);
 
 	height = fh.ascent + fh.descent;
 
-	// draw name
 	owner->DrawString(name.c_str(),
-		BPoint(frame.left/* + 13*/, frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
+				BPoint( frame.left,
+						frame.bottom - ((frame.Height() - height) / 2) - fh.descent));
 
-	// draw show
-	if (!GetUserID()->MoreExactOnlineStatus().empty()) {
+	if (!GetUserID()->MoreExactOnlineStatus().empty())
+	{
 		owner->SetHighColor(90, 90, 90, 255);
 
 		owner->DrawString(": ");
@@ -110,25 +108,28 @@ void RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 
 }
 
-void RosterItem::Update(BView *owner, const BFont *font) {
+void
+RosterItem::Update(BView *owner, const BFont *font)
+{
 	BListItem::Update(owner, font);
-
-	// set height to accomodate graphics and text
 	SetHeight(16.0);
 }
 
-bool RosterItem::StalePointer() const {
+bool
+RosterItem::StalePointer() const
+{
 	return _is_stale_pointer;
 }
 
-UserID *RosterItem::GetUserID() {
-	if (StalePointer()) {
-		return NULL;
-	} else {
-		return _userid;
-	}
+UserID*
+RosterItem::GetUserID()
+{
+	if (StalePointer()) return NULL;
+	else return _userid;
 }
 
-void RosterItem::SetStalePointer(bool is_stale) {
+void
+RosterItem::SetStalePointer(bool is_stale)
+{
 	_is_stale_pointer = is_stale;
 }

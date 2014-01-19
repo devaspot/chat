@@ -25,10 +25,10 @@ class DataForm : BWindow
 							DataForm(BRect rect);
 							~DataForm();
 
-				XMLEntity	*entity;
-				BView *xform;
-				int leftSize;
-		void		LoadDataForm(XMLEntity *entity);
+				XMLEntity*	entity;
+				BView*		xform;
+				int 		leftSize;
+		void				LoadDataForm(XMLEntity *entity);
 		virtual void		FrameResized(float width, float height);
 
 };

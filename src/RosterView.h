@@ -13,7 +13,6 @@
 #include "JRoster.h"
 #include "RosterItem.h"
 #include "RosterSuperitem.h"
-#include "TransportItem.h"
 #include "UserID.h"
 #include "XMLEntity.h"
 

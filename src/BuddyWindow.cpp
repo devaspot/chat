@@ -1,6 +1,11 @@
-//////////////////////////////////////////////////
-// Blabber [BuddyWindow.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
 #include "BuddyWindow.h"
 #include <cstdio>
@@ -17,21 +22,19 @@ BuddyWindow *BuddyWindow::_instance = NULL;
 
 BuddyWindow *BuddyWindow::Instance()
 {
-	if (_instance == NULL) {
+	if (_instance == NULL)
+	{
 		float main_window_width  = 340;
 		float main_window_height = 195;
-		
-		// create window frame position
 		BRect frame(GenericFunctions::CenteredFrame(main_window_width, main_window_height));
-
-		// create window singleton
 		_instance = new BuddyWindow(frame, NULL);
 	}
 	
 	return _instance;
 }
 
-BuddyWindow::~BuddyWindow() {
+BuddyWindow::~BuddyWindow()
+{
 	_instance = NULL;
 }
 
@@ -51,16 +54,12 @@ BuddyWindow::SetUser(UserID *user)
 			
 	_chat_services->SetEnabled(userID == NULL);
 	_handle->SetEnabled(userID == NULL);
-	//_room_nick->SetEnabled(!userID);
 	
 	if (userID && (userID->UserType() == UserID::CONFERENCE))
 	{
 		_room_nick->SetText(userID->_room_nick.c_str());
 	 	_chat_services_selection->FindItem("Conference")->SetMarked(true);
 	 	_handle->SetLabel("MUC JID:");
-
-	 	//_full_view->AddChild(_room_nick);
-	 	
 	}
 	else
 	{
@@ -80,7 +79,6 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 
 	BRect rect;
 
-	// encompassing view
 	rect = Bounds();
 	rect.OffsetTo(B_ORIGIN);
 	
@@ -90,7 +88,6 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 	rect.OffsetTo(B_ORIGIN);
 	rect.InsetBy(10.0, 12.0);
 	
-	// realname
 	rect.bottom = rect.top + 18;
 	_realname = new BTextControl(rect, "realname", "Title Name:", NULL, NULL, B_FOLLOW_ALL_SIDES);
 	_realname->SetDivider(_realname->Divider() - 75);
@@ -101,8 +98,6 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 	_handle->SetDivider(_handle->Divider() - 75);
 	_handle->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
 	
-	
-	// chat service
 	rect.OffsetBy(0.0, 23.0);
 	_chat_services_selection = new BPopUpMenu("Simple");
 	_chat_services = new BMenuField(rect, "chat_services", "Item Type:", _chat_services_selection);	
@@ -119,7 +114,6 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 		_room_nick->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
 	}
 	
-	// ok button
 	rect.OffsetBy(220.0, 55.0);
 	rect.right = rect.left + 92;
 
@@ -127,8 +121,6 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 	_ok->MakeDefault(true);
 	_ok->SetTarget(this);
 	
-
-	// add GUI components to BView
 	_full_view->AddChild(_realname);
 	_full_view->AddChild(_handle);
 	_full_view->AddChild(_chat_services);
@@ -136,81 +128,92 @@ BuddyWindow::BuddyWindow(BRect frame, UserID *user)
 	_full_view->AddChild(_ok);
 	AddChild(_full_view);
 
-	// focus to start
 	_realname->MakeFocus(true);
 }
 
-void BuddyWindow::MessageReceived(BMessage *msg)
+void
+BuddyWindow::MessageReceived(BMessage *msg)
 {
-	switch (msg->what) {
-		case JAB_OK: {
+	switch (msg->what)
+	{
+		case JAB_OK: 
 			AddNewUser();
 			break;
-		}
 		
-		case JAB_CANCEL: {
+		case JAB_CANCEL: 
 			PostMessage(B_QUIT_REQUESTED);
 			break;
-		}
 
-		case AGENT_MENU_CHANGED_TO_JABBER: {
+		case AGENT_MENU_CHANGED_TO_JABBER: 
 			if (!strcasecmp(_handle->Label(), "MUC JID:"))
 			{
 				_handle->SetLabel("JID:");
 				_full_view->RemoveChild(_room_nick);
 			}
 			break;
-		}
-		
-		case AGENT_MENU_CHANGED_TO_JABBER_CONFERENCE: {
+	
+		case AGENT_MENU_CHANGED_TO_JABBER_CONFERENCE:
 			if (!strcasecmp(_handle->Label(), "JID:"))
 			{
 				_handle->SetLabel("MUC JID:");
 				_full_view->AddChild(_room_nick);
 			}
 			break;
-		}
 	}
 }
 
-bool BuddyWindow::QuitRequested() {
+bool
+BuddyWindow::QuitRequested()
+{
 	_instance = NULL;
 	return true;
 }
 
-void BuddyWindow::AddNewUser()
+void
+BuddyWindow::AddNewUser()
 {
 	char buffer[4096];
 
-	if (!strcmp(_realname->Text(), "")) {
+	if (!strcmp(_realname->Text(), ""))
+	{
 		ModalAlertFactory::Alert("Please specify your buddy's real name.", "Oops!");
 		_realname->MakeFocus(true);
 
 		return;
 	}
 	
-	if (!strcmp(_handle->Text(), "")) {
-		sprintf(buffer, "Please specify %s's %s handle (or screenname).", _realname->Text(), (_chat_services_selection->FindMarked())->Label()); 
+	if (!strcmp(_handle->Text(), ""))
+	{
+		sprintf(buffer,
+			"Please specify %s's %s handle.",
+			_realname->Text(),
+			(_chat_services_selection->FindMarked())->Label()); 
+			
 		ModalAlertFactory::Alert(buffer, "Oops!");
 		_handle->MakeFocus(true);
 
 		return;
 	}
 	
-	// internally replace the username with a proper one if necessary (AOL, Yahoo!, etc...)
-	//Agent *agent;
 	string username = _handle->Text();
 
-	// if not Jabber
 	if (strcasecmp(_handle->Label(), "JID:")) {
 		username = GenericFunctions::CrushOutWhitespace(username);
 	}
 
-	// make a user to validate against	
 	UserID validating_user(username);
 	
-	if (!strcasecmp(_handle->Label(), "JID:") && validating_user.WhyNotValidJabberHandle().size()) {
-		sprintf(buffer, "%s is not a valid Jabber ID for the following reason:\n\n%s\n\nPlease correct it.", _handle->Text(), validating_user.WhyNotValidJabberHandle().c_str()); 
+	if (!strcasecmp(_handle->Label(), "JID:") && 
+		validating_user.WhyNotValidJabberHandle().size())
+	{
+
+		sprintf(buffer,
+			"%s is not a valid Jabber ID for the following reason:\n\n"
+			"%s\n\n"
+			"Please correct it.",
+			_handle->Text(),
+			validating_user.WhyNotValidJabberHandle().c_str()); 
+			
 		ModalAlertFactory::Alert(buffer, "Hmm, better check that...");
 		_handle->MakeFocus(true);
 		
@@ -219,10 +222,15 @@ void BuddyWindow::AddNewUser()
 	
 	if (userID == NULL)
 	{
-		// make sure it's not a duplicate of one already existing (unless itself)
 		JRoster::Instance()->Lock();
-		if (JRoster::Instance()->FindUser(JRoster::HANDLE, validating_user.JabberHandle())) {
-			sprintf(buffer, "%s already exists in your buddy list.  Please choose another so you won't get confused.", _handle->Text()); 
+		if (JRoster::Instance()->FindUser(JRoster::HANDLE, validating_user.JabberHandle()))
+		{
+
+			sprintf(buffer,
+				"%s already exists in your buddy list. "
+				"Please choose another so you won't get confused.",
+				_handle->Text()); 
+				
 			ModalAlertFactory::Alert(buffer, "Good Idea!");
 			_handle->MakeFocus(true);
 			
@@ -235,19 +243,22 @@ void BuddyWindow::AddNewUser()
 	
 	UserID *new_user;
 	
-	if (userID) // edit existing
+	if (userID)
 	{
 		new_user = userID;
 		new_user->SetRoomNick(_room_nick->Text());
 		userID = NULL;
-	} else // create a new user
+	}
+	else 
 	{
 		new_user = new UserID(UserID(username));
 
 		if (!strcasecmp(_handle->Label(), "JID:"))
 		{
 			new_user->SetUsertype(UserID::JABBER);
-		} else {
+		}
+		else
+		{
 			new_user->SetUsertype(UserID::CONFERENCE);
 			new_user->SetOnlineStatus(UserID::CONF_STATUS);
 			new_user->SetRoomNick(_room_nick->Text());
@@ -255,7 +266,6 @@ void BuddyWindow::AddNewUser()
 	}
 	
 	new_user->SetFriendlyName(_realname->Text());
-		
 	
 	if (new_user->UserType() == UserID::CONFERENCE && TalkManager::Instance()->jabber->_storage_supported)
 	{
@@ -268,6 +278,5 @@ void BuddyWindow::AddNewUser()
 		TalkManager::Instance()->jabber->SendSubscriptionRequest(new_user->JabberHandle());
 	}
 	
-	// close window explicitly
 	PostMessage(B_QUIT_REQUESTED);
 }

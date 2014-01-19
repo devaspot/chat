@@ -1,45 +1,50 @@
-//////////////////////////////////////////////////
-// Haiku Chat [Settings.cpp]
-//////////////////////////////////////////////////
+/*
+ * Copyright 2010-2014, Haiku, Inc. All rights reserved.
+ * Distributed under the terms of the MIT license.
+ *
+ * Authors:
+ *                Maxim Sokhatsky <maxim@synrc.com>
+ *
+ */
 
-#ifndef BLABBER_SETTINGS_H
-	#include "Settings.h"
-#endif
+#include "Settings.h"
+#include <storage/Directory.h>
+#include "ModalAlertFactory.h"
 
-#ifndef _DIRECTORY_H
-	#include <storage/Directory.h>
-#endif
+BlabberSettings* BlabberSettings::_instance = NULL;
 
-#ifndef MODAL_ALERT_FACTORY_H
-	#include "ModalAlertFactory.h"
-#endif
-
-BlabberSettings *BlabberSettings::_instance = NULL;
-
-BlabberSettings *BlabberSettings::Instance() {
-	if (_instance == NULL) {
+BlabberSettings*
+BlabberSettings::Instance()
+{
+	if (_instance == NULL) 
 		_instance = new BlabberSettings("Chat/app-settings");
-	}
 	
 	return _instance;
 }
 
-BlabberSettings::~BlabberSettings() {
+BlabberSettings::~BlabberSettings()
+{
 	_instance = NULL;
 }
 
 BlabberSettings::BlabberSettings(const char *filename)
-	: FileXMLReader(filename, true) {
-	// check file opening status and give a friendly message
+	:
+	FileXMLReader(filename, true)
+{
 	FileXMLReader::file_status status = FileStatus();
 	
-	if (status == FileXMLReader::FILE_NOT_FOUND) {
-		// first time user perhaps?
-//		ModalAlertFactory::NonModalAlert("It appears that this is your first time using Jabber for Haiku.", "Your welcome!");
+	if (status == FileXMLReader::FILE_NOT_FOUND)
+	{
        SetDefaultTagsValue();
-	} else if (status == FileXMLReader::FILE_CORRUPTED) {
-		// back up their settings
-		ModalAlertFactory::Alert("We regret to inform you that your settings file has been corrupted.  It has been replaced with a fresh copy.", "Oh, darn!");
+	}
+	else if (status == FileXMLReader::FILE_CORRUPTED)
+	{
+		ModalAlertFactory::Alert(
+			"We regret to inform you that your settings "
+			"file has been corrupted. "
+			"It has been replaced with a fresh copy.",
+			"Oh, darn!");
+			
 		SetDefaultTagsValue();
 	}
 }
