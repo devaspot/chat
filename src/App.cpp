@@ -35,9 +35,7 @@ App::AboutRequested()
 	BAlert *alert = new BAlert("about", "Chat\n\n"
 		"By Maxim Sokhatsky.\n\n"
 		"Thanks to John Blanco, Mathieu Brault and "
-		"Oliver Ruiz Dorantes.\n\n"
-		"Revision "DENGON_SVNVERSION" from "
-		""DENGON_SVNDATE"\n", "Chat!");
+		"Oliver Ruiz Dorantes.\n\n", "Chat!");
 	BTextView *view = alert->TextView();
 	BFont font;
 	view->SetStylable(true);
