@@ -30,7 +30,6 @@
 #include "RosterItem.h"
 #include "ModalAlertFactory.h"
 #include "TalkManager.h"
-#include "JRoster.h"
 
 #define SSL_ENABLED	'ssl3'
 #define BOX_WIDTH BSize(fUsername->StringWidth("w")*36, B_SIZE_UNSET)
@@ -252,9 +251,10 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				
 				if (user->UserType() == UserID::CONFERENCE && jabber->_storage_supported)
 				{
-					JRoster::Instance()->Lock();
-					JRoster::Instance()->RemoveUser(user);
-					JRoster::Instance()->Unlock();
+//					JRoster::Instance()->Lock();
+//					JRoster::Instance()->RemoveUser(user);
+//					JRoster::Instance()->Unlock();
+					fRosterView->fUsers.erase(user->JabberHandle());
 					fRosterView->RemoveItem(item);
 					fRosterView->Invalidate();
 					jabber->SaveConference(NULL);

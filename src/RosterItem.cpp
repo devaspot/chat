@@ -25,7 +25,7 @@ RosterItem::~RosterItem()
 void
 RosterItem::DrawItem(BView *owner, BRect frame, bool complete)
 {
-	if (StalePointer()) return;
+	if (StalePointer() || !owner || !_userid || !GetUserID()) return;
 
 	UserID::online_status status = _userid->OnlineStatus();
 	std::string exact_status = _userid->ExactOnlineStatus();

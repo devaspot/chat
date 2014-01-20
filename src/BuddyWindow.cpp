@@ -14,7 +14,6 @@
 #include "GenericFunctions.h"
 #include "Messages.h"
 #include "ModalAlertFactory.h"
-#include "JRoster.h"
 #include "TalkManager.h"
 #include <strings.h>
 
@@ -222,8 +221,13 @@ BuddyWindow::AddNewUser()
 	
 	if (userID == NULL)
 	{
-		JRoster::Instance()->Lock();
-		if (JRoster::Instance()->FindUser(JRoster::HANDLE, validating_user.JabberHandle()))
+		UserID* validated = BlabberMainWindow::Instance()->
+								fRosterView->fUsers[validating_user.JabberHandle()];
+								
+		//JRoster::Instance()->Lock();
+//		if (JRoster::Instance()->FindUser(JRoster::HANDLE, validating_user.JabberHandle()))
+
+		if (validated)
 		{
 
 			sprintf(buffer,
@@ -232,12 +236,13 @@ BuddyWindow::AddNewUser()
 				_handle->Text()); 
 				
 			ModalAlertFactory::Alert(buffer, "Good Idea!");
+			
 			_handle->MakeFocus(true);
 			
-			JRoster::Instance()->Unlock();
+			//JRoster::Instance()->Unlock();
 			return;
 		}
-		JRoster::Instance()->Unlock();
+		//JRoster::Instance()->Unlock();
 	}
 
 	

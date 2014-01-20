@@ -4,8 +4,7 @@ SRCS=   App.cpp \
 		MainWindow.cpp ChatWindow.cpp BuddyWindow.cpp DataForm.cpp \
 		ModalAlertFactory.cpp \
 		SplitView.cpp ChatTextView.cpp StatusView.cpp RosterView.cpp \
-		RosterItem.cpp RosterSuperitem.cpp PeopleListItem.cpp \
-		JRoster.cpp UserID.cpp \
+		RosterItem.cpp RosterSuperitem.cpp PeopleListItem.cpp UserID.cpp \
 		TalkManager.cpp JabberProtocol.cpp \
 		MessageRepeater.cpp \
 		EditingFilter.cpp \

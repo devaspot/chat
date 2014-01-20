@@ -123,19 +123,16 @@ void RosterView::AttachedToWindow()
 
 	UpdatePopUpMenu();
 
-	AddItem(_online  = new RosterSuperitem("Online"));
-	AddItem(_offline = new RosterSuperitem("Offline"));
-	AddItem(_unknown = new RosterSuperitem("No Presence"));
-	AddItem(_conferences = new RosterSuperitem("Conferences"));
+	_online  = new RosterSuperitem("Online");
+	_offline = new RosterSuperitem("Offline");
+	_unknown = new RosterSuperitem("No Presence");
+	_conferences = new RosterSuperitem("Conferences");
 	
 	_item_to_status_map[_offline] = UserID::OFFLINE;
 	_item_to_status_map[_online]  = UserID::ONLINE;
 	_item_to_status_map[_unknown] = UserID::UNKNOWN;
 	_item_to_status_map[_conferences] = UserID::CONF_STATUS;
 
-	_offline->SetExpanded(!BlabberSettings::Instance()->Tag("offline-collapsed"));
-	_unknown->SetExpanded(!BlabberSettings::Instance()->Tag("unknown-collapsed"));
-	_conferences->SetExpanded(!BlabberSettings::Instance()->Tag("conferences-collapsed"));
 
 	_status_to_item_map[UserID::OFFLINE] = _offline;
 	_status_to_item_map[UserID::ONLINE]  = _online;
@@ -144,6 +141,22 @@ void RosterView::AttachedToWindow()
 	
 	_presence->SetTargetForItems(Window());
 	_popup->SetTargetForItems(Window());
+	
+	CreateRoots();
+}
+
+void
+RosterView::CreateRoots()
+{
+	AddItem(_online);
+	AddItem(_offline);
+	AddItem(_unknown);
+	AddItem(_conferences);
+	
+	_offline->SetExpanded(!BlabberSettings::Instance()->Tag("offline-collapsed"));
+	_unknown->SetExpanded(!BlabberSettings::Instance()->Tag("unknown-collapsed"));
+	_conferences->SetExpanded(!BlabberSettings::Instance()->Tag("conferences-collapsed"));
+
 }
 
 RosterItem*
@@ -202,33 +215,54 @@ RosterView::SelectionChanged()
 	BOutlineListView::SelectionChanged();
 }
 
-void RosterView::LinkUser(UserID *added_user)
+void RosterView::LinkUser(UserID *added_user, bool sort = true)
 {
+	if (!added_user) return;
+	
+	Window()->Lock();
+	
 	if (added_user->UserType() == UserID::CONFERENCE)
 	{
 		AddUnder(new RosterItem(added_user), _conferences);
-		SortItemsUnder(_conferences, true, _ListComparison);
+		if (sort) SortItemsUnder(_conferences, true, _ListComparison);
 	}
 	else if (added_user->UserType() == UserID::JABBER)
 	{
 		if (added_user->SubscriptionStatus() == "none")
 		{
 			AddUnder(new RosterItem(added_user), _unknown);
-			SortItemsUnder(_unknown, true, _ListComparison);
+			if (sort) SortItemsUnder(_unknown, true, _ListComparison);
 		}
 		else 
 		{
-			AddUnder(new RosterItem(added_user), _offline);
-			SortItemsUnder(_offline, true, _ListComparison);
+			if (added_user->OnlineStatus() == UserID::ONLINE)
+			{
+				AddUnder(new RosterItem(added_user), _online);
+				if (sort) SortItemsUnder(_offline, true, _ListComparison);
+			}
+			else if (added_user->OnlineStatus() == UserID::CONF_STATUS)
+			{
+				AddUnder(new RosterItem(added_user), _conferences);
+				if (sort) SortItemsUnder(_offline, true, _ListComparison);
+			}
+			else
+			{
+				AddUnder(new RosterItem(added_user), _offline);
+				if (sort) SortItemsUnder(_offline, true, _ListComparison);
+			}
 		}
 	}
+	
+	Window()->Unlock();
 }
 
 void
 RosterView::UnlinkUser(UserID *removed_user)
 {
+	Window()->Lock();
 	uint32 index = FindUser(removed_user);
 	if (index >= 0) RemoveItem(index);
+	Window()->Unlock();
 }
 
 int32
@@ -299,6 +333,7 @@ const UserID *RosterView::GetConference(int i)
 
 void RosterView::UpdateRoster()
 {
+/*
 	JRoster *roster = JRoster::Instance();
 
 	roster->Lock();
@@ -331,10 +366,10 @@ void RosterView::UpdateRoster()
 			// process removals
 			if (!roster->ExistingUserObject(item->GetUserID()) || !roster->FindUser(item->GetUserID()))
 			{
-				item->SetStalePointer(true);
+				Window()->Lock();
 				RemoveItem(item);
-				//fprintf(stderr, "RostetView::UpdateRoster process removomals");
-				goto RESET;
+				Window()->Unlock();
+				//goto RESET;
 			}
 			
 		
@@ -343,10 +378,12 @@ void RosterView::UpdateRoster()
 
 			{
 				UserID::online_status old_status = _item_to_status_map[Superitem(item)];
+				Window()->Lock();
 				RemoveItem(item);
 				AddUnder(item, _status_to_item_map[item->GetUserID()->OnlineStatus()]);
-				SortItemsUnder(_status_to_item_map[item->GetUserID()->OnlineStatus()], true, _ListComparison);
-				goto RESET;
+				Window()->Unlock();
+				//SortItemsUnder(_status_to_item_map[item->GetUserID()->OnlineStatus()], true, _ListComparison);
+				//goto RESET;
 			}			
 
 			// clean it
@@ -355,8 +392,7 @@ void RosterView::UpdateRoster()
 
 	}
 
-
-	SortItemsUnder(_online, true, _ListComparison);
+	//SortItemsUnder(_online, true, _ListComparison);
 	//SortItemsUnder(_offline, true, _ListComparison);
 	//SortItemsUnder(_unknown, true, _ListComparison);
 	//SortItemsUnder(_conferences, true, _ListComparison);
@@ -364,5 +400,5 @@ void RosterView::UpdateRoster()
 	Invalidate();
 
 	roster->Unlock();
-
+*/
 }

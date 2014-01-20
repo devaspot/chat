@@ -20,7 +20,6 @@
 #include <sys/utsname.h>
 #include <Roster.h>
 #include <unistd.h>
-
 #include "version.h"
 
 #define DEBUG 
@@ -625,113 +624,98 @@ JabberProtocol::SendGroupPresence(string _group_room, string _group_username)
 void
 JabberProtocol::ProcessPresence(XMLEntity *entity)
 {
-	
-
 	int num_matches = 0;
+	string room, server, user;
 
-	// verify we have a username
-	if (entity->Attribute("from"))
+	if (!entity->Attribute("from")) return;
+		
+	if (entity->Child("x", "xmlns", "http://jabber.org/protocol/muc#user"))
 	{
-		// circumvent groupchat presences
-		string room, server, user;
-		
-		if (entity->Child("x", "xmlns", "http://jabber.org/protocol/muc#user"))
-		{
-			UserID from = UserID(string(entity->Attribute("from")));
-			room = from.JabberUsername();
-			server = from.JabberServer();
-			user = from.JabberResource();
-			fprintf(stderr, "Group Presence in room %s from user %s.\n", 
-				from.JabberHandle().c_str(), user.c_str());
+		UserID from = UserID(string(entity->Attribute("from")));
+		room = from.JabberUsername();
+		server = from.JabberServer();
+		user = from.JabberResource();
+		fprintf(stderr, "Group Presence in room %s from user %s.\n", 
+			from.JabberHandle().c_str(), user.c_str());
 						
-			BMessage *msg = new BMessage(JAB_GROUP_CHATTER_ONLINE);
-			msg->AddString("room", (room + '@' + server).c_str());
-			msg->AddString("server", server.c_str());
-			msg->AddString("username", user.c_str());
+		BMessage *msg = new BMessage(JAB_GROUP_CHATTER_ONLINE);
+		msg->AddString("room", (room + '@' + server).c_str());
+		msg->AddString("server", server.c_str());
+		msg->AddString("username", user.c_str());
 			
-			if (!entity->Attribute("type") || !strcasecmp(entity->Attribute("type"), "available"))
+		if (!entity->Attribute("type") || !strcasecmp(entity->Attribute("type"), "available"))
+		{
+			if (entity->Child("show") && entity->Child("show")->Data())
 			{
-				if (entity->Child("show") && entity->Child("show")->Data())
-				{
-					msg->AddString("show", entity->Child("show")->Data());
-				} else
-					msg->AddString("show", "online");
-
+				msg->AddString("show", entity->Child("show")->Data());
+			} else
+				msg->AddString("show", "online");
 				if (entity->Child("status") && entity->Child("status")->Data())
-				{
-					msg->AddString("status", entity->Child("status")->Data());
-				} else
-					msg->AddString("status", "");
-				
-				if (entity->Child("x")->Child("item") &&
-					entity->Child("x")->Child("item")->Attribute("role"))
-					msg->AddString("role", entity->Child("x")->Child("item")->Attribute("role"));
-				else
-					msg->AddString("role", "admin");
-				
-				if (entity->Child("x")->Child("item") &&
-					entity->Child("x")->Child("item")->Attribute("affiliation"))
-					msg->AddString("affiliation", entity->Child("x")->Child("item")->Attribute("affiliation"));
-				else
-					msg->AddString("affiliation", "none");
-		
-				msg->what = JAB_GROUP_CHATTER_ONLINE;
-			}
-			else if (!strcasecmp(entity->Attribute("type"), "unavailable"))
 			{
-				msg->what = JAB_GROUP_CHATTER_OFFLINE;
-			}
+				msg->AddString("status", entity->Child("status")->Data());
+			} else
+				msg->AddString("status", "");
 			
-//			TalkManager::Instance()->Lock();
-			
-			ChatWindow *window = TalkManager::Instance()->FindWindow(from.JabberHandle());
-			
-			if (window != NULL)
-			{
-//				fprintf(stderr, "Process group presence %s.\n", window->GetUserID()->JabberHandle().c_str());
-				
-				window->PostMessage(msg);
-			}
+			if (entity->Child("x")->Child("item") &&
+				entity->Child("x")->Child("item")->Attribute("role"))
+				msg->AddString("role", entity->Child("x")->Child("item")->Attribute("role"));
 			else
-			{
-//				fprintf(stderr, "There is no window group presence route to.\n");
-			}
+				msg->AddString("role", "admin");
 			
-//			TalkManager::Instance()->Unlock();
-			
-			return;
-		}		
-		
-		JRoster *roster = JRoster::Instance();
-		
-//		roster->Lock();
-		
-		for (JRoster::ConstRosterIter i = roster->BeginIterator(); i != roster->EndIterator(); ++i)
+			if (entity->Child("x")->Child("item") &&
+				entity->Child("x")->Child("item")->Attribute("affiliation"))
+				msg->AddString("affiliation", entity->Child("x")->Child("item")->Attribute("affiliation"));
+			else
+				msg->AddString("affiliation", "none");
+	
+			msg->what = JAB_GROUP_CHATTER_ONLINE;
+		}
+		else if (!strcasecmp(entity->Attribute("type"), "unavailable"))
 		{
-			UserID *user = NULL;
-
+			msg->what = JAB_GROUP_CHATTER_OFFLINE;
+		}
+		
+		ChatWindow *window = TalkManager::Instance()->FindWindow(from.JabberHandle());
+		if (window != NULL) window->PostMessage(msg);
+		
+		return;
+	}		
+		
+	//JRoster *roster = JRoster::Instance();
+/*		
+	for (JRoster::ConstRosterIter i = roster->BeginIterator(); i != roster->EndIterator(); ++i)
+	{
+		UserID *user = NULL;
 			if (!strcasecmp(UserID(entity->Attribute("from")).JabberHandle().c_str(),
-					(*i)->JabberHandle().c_str()))
-			{
-				++num_matches;
-				user = *i;
-				ProcessUserPresence(user, entity);
-				fprintf(stderr, "Process roster presence %s.\n", user->JabberHandle().c_str());
-			}
-		}
-		
-		if (num_matches == 0)
+				(*i)->JabberHandle().c_str()))
 		{
-			UserID user(string(entity->Attribute("from")));
-			fprintf(stderr, "Process not in roster presence %s.\n", user.JabberHandle().c_str());
-			ProcessUserPresence(&user, entity);
+			++num_matches;
+			user = *i;
+			ProcessUserPresence(user, entity);
+			fprintf(stderr, "Process roster presence %s.\n", user->JabberHandle().c_str());
 		}
-			
-//		roster->Unlock();
 		
-		mainWindow->PostMessage(BLAB_UPDATE_ROSTER);			
-
+		mainWindow->fRosterView->UnlinkUser(user);
+		mainWindow->fRosterView->LinkUser(user);
 	}
+	
+	if (num_matches == 0)
+	{
+		UserID user(string(entity->Attribute("from")));
+		fprintf(stderr, "Process not in roster presence %s.\n", user.JabberHandle().c_str());
+		ProcessUserPresence(&user, entity);
+		mainWindow->fRosterView->LinkUser(&user);
+	}
+*/
+
+	UserID from(string(entity->Attribute("from")));
+	fprintf(stderr, "Process not in roster presence %s.\n", from.JabberHandle().c_str());
+	UserID* userId = mainWindow->fRosterView->fUsers[from.JabberHandle()];
+	mainWindow->fRosterView->UnlinkUser(userId);
+	ProcessUserPresence(userId, entity);
+	mainWindow->fRosterView->LinkUser(userId);
+	
+	//mainWindow->PostMessage(BLAB_UPDATE_ROSTER);			
 }
 
 char **
@@ -753,14 +737,11 @@ void
 JabberProtocol::Disconnect()
 {
 	Reset();
-	JRoster::Instance()->Lock();
-	JRoster::Instance()->RemoveAllUsers();
-	JRoster::Instance()->Unlock();
 
-	mainWindow->Lock();
-	mainWindow->PostMessage(BLAB_UPDATE_ROSTER);
+	mainWindow->fRosterView->MakeEmpty();
+	mainWindow->fRosterView->CreateRoots();
+	mainWindow->fRosterView->fUsers.clear();
 	mainWindow->ShowLogin();
-	mainWindow->Unlock();
 	
 	BString xml = "</stream:stream>";
 	socketAdapter->SendData(xml);
@@ -1117,12 +1098,13 @@ JabberProtocol::ProcessUserPresence(UserID *user, XMLEntity *entity)
 void
 JabberProtocol::ParseStorage(XMLEntity *storage)
 {
-	JRoster::Instance()->Lock();
+	//JRoster::Instance()->Lock();
 	
 	for (int i=0; i<storage->CountChildren(); ++i)
 	{
 		UserID user(string(storage->Child(i)->Attribute("jid")));
-		UserID *roster_user = JRoster::Instance()->FindUser(&user);
+		UserID *roster_user = mainWindow->fRosterView->fUsers[user.JabberHandle()];
+								//JRoster::Instance()->FindUser(&user);
 		
 		if (roster_user)
 		{
@@ -1132,7 +1114,8 @@ JabberProtocol::ParseStorage(XMLEntity *storage)
 		{
 			fprintf(stderr, "Added conference %s to roster.\n", user.JabberHandle().c_str());
 			roster_user = new UserID(user.JabberHandle());
-			JRoster::Instance()->AddRosterUser(roster_user);
+			//JRoster::Instance()->AddRosterUser(roster_user);
+			
 		}
 		
 		roster_user->SetFriendlyName(string(storage->Child(i)->Attribute("name")));
@@ -1141,11 +1124,14 @@ JabberProtocol::ParseStorage(XMLEntity *storage)
 		if (storage->Child(i)->Child("nick"))
 			roster_user->SetRoomNick(storage->Child(i)->Child("nick")->Data());
 			
+		mainWindow->fRosterView->LinkUser(roster_user, false);
+		mainWindow->fRosterView->fUsers[roster_user->JabberHandle()] = roster_user;
+
+			
 	}
 	
-	JRoster::Instance()->Unlock();
-	
-	JRoster::Instance()->RefreshRoster();
+	//JRoster::Instance()->Unlock();
+	//JRoster::Instance()->RefreshRoster();
 }
 
 void
@@ -1160,7 +1146,7 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 		return;
 	}
 	
-	JRoster::Instance()->Lock();
+	//JRoster::Instance()->Lock();
 	
 	for (int i=0; i<entity->CountChildren(); ++i)
 	{
@@ -1210,7 +1196,10 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 			
 			
 
-			UserID *roster_user = JRoster::Instance()->FindUser(&user);
+			UserID *roster_user = BlabberMainWindow::Instance()->fRosterView->
+							fUsers[user.JabberHandle()];
+							
+								//JRoster::Instance()->FindUser(&user);
 			
 			if (roster_user) 
 			{
@@ -1221,7 +1210,8 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 				{
 					if (user.SubscriptionStatus() == "remove")
 					{
-						JRoster::Instance()->RemoveUser(roster_user);
+						//JRoster::Instance()->RemoveUser(roster_user);
+						mainWindow->fRosterView->fUsers.erase(roster_user->JabberHandle());
 												
 						fprintf(stderr, "User %s was removed from roster.\n",
 							roster_user->JabberHandle().c_str());
@@ -1275,7 +1265,10 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 				roster_user->SetOnlineStatus(user.OnlineStatus());
 				roster_user->SetUsertype(user.UserType());
 								
-				JRoster::Instance()->AddRosterUser(roster_user);
+				//JRoster::Instance()->AddRosterUser(roster_user);
+				
+				mainWindow->fRosterView->LinkUser(roster_user, false);
+				mainWindow->fRosterView->fUsers[roster_user->JabberHandle()] = roster_user;
 				
 				fprintf(stderr, "User %s was added to roster subscription='%s'.\n",
 					roster_user->JabberHandle().c_str(), roster_user->SubscriptionStatus().c_str());
@@ -1286,9 +1279,9 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 		}
 	}
 	
-	JRoster::Instance()->Unlock();
+	//JRoster::Instance()->Unlock();
 
-	JRoster::Instance()->RefreshRoster();
+	//JRoster::Instance()->RefreshRoster();
 
 	
 }

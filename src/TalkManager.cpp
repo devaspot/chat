@@ -10,7 +10,6 @@
 #include <interface/Window.h>
 #include "Settings.h"
 #include "ChatWindow.h"
-#include "JRoster.h"
 #include "MessageRepeater.h"
 #include "Messages.h"
 #include "ModalAlertFactory.h"
@@ -132,7 +131,6 @@ void TalkManager::ProcessMessageData(XMLEntity *entity)
 		type = ChatWindow::CHAT;
 	}
 	
-	// configure routing information
 	sender = string(entity->Attribute("from"));
 	receiver = string(entity->Attribute("to"));
 	group_username = UserID(sender).JabberResource();
@@ -143,10 +141,12 @@ void TalkManager::ProcessMessageData(XMLEntity *entity)
 		
 	if (!window)
 	{
-		JRoster::Instance()->Lock();
+		//JRoster::Instance()->Lock();
 			
 			  
-		UserID *user = JRoster::Instance()->FindUser(&sender_user);
+		UserID *user = BlabberMainWindow::Instance()->fRosterView->
+							fUsers[sender_user.JabberHandle()];
+						//JRoster::Instance()->FindUser(&sender_user);
 		
 		if (!user)
 		{
@@ -167,7 +167,7 @@ void TalkManager::ProcessMessageData(XMLEntity *entity)
 			fprintf(stderr, "Not found incoming message user in roster.\n");
 		}
 
-		JRoster::Instance()->Unlock();
+		//JRoster::Instance()->Unlock();
 			
 		if (type==ChatWindow::CHAT /*|| type==ChatWindow::GROUP*/ )
 		{
@@ -189,8 +189,7 @@ void TalkManager::ProcessMessageData(XMLEntity *entity)
 	
 	//fprintf(stderr, "Activate. ");
 	//window->Activate();
-	
-		
+			
 	string body;
 	string subject;
 		
