@@ -42,7 +42,6 @@ public:
 			void                UnlinkUser(UserID *removed_user);
 			int32               FindUser(UserID *compare_user);
 			void                UpdatePopUpMenu();
-			void                UpdateRoster();
 			int					GetConferencesCount();
 	const 	UserID*				GetConference(int i);
 			UsersMap			fUsers;

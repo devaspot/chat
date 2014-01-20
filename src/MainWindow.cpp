@@ -109,18 +109,14 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 		}
 		
 		case JAB_DISCONNECT:
-		{
 			TalkManager::Instance()->Reset();
-			
-			SetTitle("Chat");
-			jabber->_storage_supported = true;
 			Lock();
+			SetTitle("Chat");
 			fStatusView->SetMessage("disconnect");
 			Unlock();
+			jabber->_storage_supported = true;
 			jabber->Disconnect();
-			
 			break;
-		}
 
 		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:
 		case JAB_OPEN_CHAT:
@@ -160,7 +156,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				jabber->SendSubscriptionRequest(user->JabberHandle());
 			}
 			Unlock();
-			fRosterView->UpdateRoster();
 			break;
 		}
 		
@@ -177,7 +172,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			
 			}
 			Unlock();
-			fRosterView->UpdateRoster();
 			break;
 		}
 		
@@ -191,7 +185,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				jabber->RejectPresence(user->JabberHandle());
 			}
 			Unlock();
-			fRosterView->UpdateRoster();
 			break;
 		}
 		
@@ -205,17 +198,15 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				jabber->AcceptPresence(user->JabberHandle());
 			}
 			Unlock();
-			fRosterView->UpdateRoster();
 			break;
 		}
+		
 		case JAB_OPEN_ADD_BUDDY_WINDOW:
-		{
 			Lock();
 			BuddyWindow::Instance()->SetUser(NULL);
 			BuddyWindow::Instance()->Show();
 			Unlock();
 			break;
-		}
 		
 		case JAB_OPEN_EDIT_BUDDY_WINDOW:
 		{
@@ -239,12 +230,12 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			if (item != NULL)
 			{
 				user = (UserID *)item->GetUserID();
+				fRosterView->fUsers.erase(user->JabberHandle());
+				fRosterView->RemoveItem(item);
+				fRosterView->Invalidate();
 				
 				if (user->UserType() == UserID::CONFERENCE && jabber->_storage_supported)
 				{
-					fRosterView->fUsers.erase(user->JabberHandle());
-					fRosterView->RemoveItem(item);
-					fRosterView->Invalidate();
 					jabber->SaveConference(NULL);
 					jabber->SendStorageRequest("storage", "storage:bookmarks");
 				}
@@ -257,21 +248,15 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 		}
 		
 		case B_ABOUT_REQUESTED:
-		{
 			be_app->PostMessage(B_ABOUT_REQUESTED);
 			break;
-		}
 		
 		case JAB_QUIT:
-		{
 			be_app->PostMessage(B_QUIT_REQUESTED);
 			break;
-		}
 		
 		default:
-		{
 			BWindow::MessageReceived(msg);
-		}
 		
 	}
 }
