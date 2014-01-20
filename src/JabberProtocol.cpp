@@ -714,8 +714,7 @@ JabberProtocol::ProcessPresence(XMLEntity *entity)
 	mainWindow->fRosterView->UnlinkUser(userId);
 	ProcessUserPresence(userId, entity);
 	mainWindow->fRosterView->LinkUser(userId);
-	
-	//mainWindow->PostMessage(BLAB_UPDATE_ROSTER);			
+	//PostMessage(BLAB_UPDATE_ROSTER);			
 }
 
 char **
@@ -738,10 +737,12 @@ JabberProtocol::Disconnect()
 {
 	Reset();
 
+	mainWindow->Lock();
 	mainWindow->fRosterView->MakeEmpty();
 	mainWindow->fRosterView->CreateRoots();
 	mainWindow->fRosterView->fUsers.clear();
 	mainWindow->ShowLogin();
+	mainWindow->Unlock();
 	
 	BString xml = "</stream:stream>";
 	socketAdapter->SendData(xml);
@@ -1283,6 +1284,9 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 
 	//JRoster::Instance()->RefreshRoster();
 
+	mainWindow->Lock();
+	mainWindow->fStatusView->SetMessage("roster updated.");
+	mainWindow->Unlock();
 	
 }
 

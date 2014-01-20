@@ -10,9 +10,6 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-// BLABBER MESSAGES
-#define BLAB_UPDATE_ROSTER              0xA0000000
-
 // generic
 #define JAB_OK                          0x12000000
 #define JAB_CANCEL                      0x12000FFF
@@ -88,7 +85,6 @@
 #define JAB_DISCONNECT                  0x16002000
 #define JAB_DISCONNECTED                0x16003000
 #define JAB_ABNORMAL_DISCONNECT         0x16004000
-
 #define JAB_LOGIN                       0x16006000
 #define JAB_LOGGED_IN                   0x16007000
 #define JAB_LOGOUT                      0x16008000
@@ -99,18 +95,12 @@
 #define JAB_REVOKE_PRESENCE        		0x17001003
 #define JAB_RESEND_PRESENCE        		0x17001004
 
-
-#define BLAB_AVAILABLE_FOR_CHAT         0x17003000
-#define BLAB_DO_NOT_DISTURB             0x17003001
-#define BLAB_AWAY_TEMPORARILY           0x17003002
-#define BLAB_AWAY_EXTENDED              0x17003003
-#define BLAB_CUSTOM_STATUS              0x17003004
-
-#define BLAB_SCHOOL                     0x17003005
-#define BLAB_WORK                       0x17003006
-#define BLAB_LUNCH                      0x17003007
-#define BLAB_DINNER                     0x17003008
-#define BLAB_SLEEP                      0x17003009
+// status
+#define JAB_AVAILABLE_FOR_CHAT         0x17003000
+#define JAB_DO_NOT_DISTURB             0x17003001
+#define JAB_AWAY_TEMPORARILY           0x17003002
+#define JAB_AWAY_EXTENDED              0x17003003
+#define JAB_CUSTOM_STATUS              0x17003004
 
 // transports
 #define AGENT_MENU_CHANGED_TO_AIM       0x18000000
@@ -122,45 +112,5 @@
 #define UNREGISTER_TRANSPORT            0x18000006
 #define TRANSPORT_UPDATE                0x18000007
 #define AGENT_MENU_CHANGED_TO_JABBER_CONFERENCE    0x18000008
-
-// sounds
-#define JAB_SELECTED_NEW_MESSAGE_SOUND  0x19000000
-#define JAB_NO_NEW_MESSAGE_SOUND        0x19000001
-#define JAB_PICK_NEW_MESSAGE_SOUND      0x19000002
-#define NEW_MESSAGE_FILE_OPEN           0x19000003
-
-#define JAB_SELECTED_MESSAGE_SOUND  0x19000004
-#define JAB_NO_MESSAGE_SOUND        0x19000005
-#define JAB_PICK_MESSAGE_SOUND      0x19000006
-#define MESSAGE_FILE_OPEN           0x19000007
-
-#define JAB_SELECTED_USER_ONLINE_SOUND  0x19000008
-#define JAB_NO_USER_ONLINE_SOUND        0x19000009
-#define JAB_PICK_USER_ONLINE_SOUND      0x1900000A
-#define USER_ONLINE_FILE_OPEN           0x1900000B
-
-#define JAB_SELECTED_USER_OFFLINE_SOUND 0x1C000008
-#define JAB_NO_USER_OFFLINE_SOUND       0x1C000009
-#define JAB_PICK_USER_OFFLINE_SOUND     0x1C00000A
-#define USER_OFFLINE_FILE_OPEN          0x1C00000B
-
-#define JAB_SELECTED_ALERT_SOUND        0x1900000C
-#define JAB_NO_ALERT_SOUND              0x1900000D
-#define JAB_PICK_ALERT_SOUND            0x1900000E
-#define ALERT_FILE_OPEN                 0x1900000F
-
-#define TEST_NEW_CHAT                   0x1A000000
-#define TEST_ONLINE                     0x1A000001
-#define TEST_OFFLINE                    0x1A000002
-#define TEST_ALERT                      0x1A000003
-#define TEST_MESSAGE                    0x1A000004
-
-// shareware
-#define GO_TO_RIV                       0x1B000000
-#define GO_TO_BEBITS                    0x1B000001
-
-// channels
-#define JAB_A_CHANNEL         		    0x1C000000
-
 
 #endif

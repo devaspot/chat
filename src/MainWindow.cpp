@@ -121,14 +121,14 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			break;
 		}
 
-		case BLAB_UPDATE_ROSTER:
-		{
-			Lock();
-			fStatusView->SetMessage("roster updated.");
-			fRosterView->UpdateRoster();
-			Unlock();
-			break;
-		}
+//		case BLAB_UPDATE_ROSTER:
+//		{
+//			Lock();
+//			fStatusView->SetMessage("roster updated.");
+//			fRosterView->UpdateRoster();
+//			Unlock();
+//			break;
+//		}
 		
 		
 		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:

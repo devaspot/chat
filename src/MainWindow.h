@@ -39,6 +39,7 @@ public:
 	JabberProtocol*            jabber;
 	BCheckBox*                 fNewAccount;
 	RosterView*                fRosterView;
+	StatusView*                fStatusView;
 		
 protected:
 	                           BlabberMainWindow(BRect frame);
@@ -53,7 +54,6 @@ private:
 	BTextControl*              fUsername;
 	BTextControl*              fPassword;
 	BView*                     fLoginView;
-	StatusView*                fStatusView;
 	BScrollView*               fRosterScroller;
 	
 	BMenuBar*                  fMenuBar;
