@@ -680,33 +680,6 @@ JabberProtocol::ProcessPresence(XMLEntity *entity)
 		
 		return;
 	}		
-		
-	//JRoster *roster = JRoster::Instance();
-/*		
-	for (JRoster::ConstRosterIter i = roster->BeginIterator(); i != roster->EndIterator(); ++i)
-	{
-		UserID *user = NULL;
-			if (!strcasecmp(UserID(entity->Attribute("from")).JabberHandle().c_str(),
-				(*i)->JabberHandle().c_str()))
-		{
-			++num_matches;
-			user = *i;
-			ProcessUserPresence(user, entity);
-			fprintf(stderr, "Process roster presence %s.\n", user->JabberHandle().c_str());
-		}
-		
-		mainWindow->fRosterView->UnlinkUser(user);
-		mainWindow->fRosterView->LinkUser(user);
-	}
-	
-	if (num_matches == 0)
-	{
-		UserID user(string(entity->Attribute("from")));
-		fprintf(stderr, "Process not in roster presence %s.\n", user.JabberHandle().c_str());
-		ProcessUserPresence(&user, entity);
-		mainWindow->fRosterView->LinkUser(&user);
-	}
-*/
 
 	UserID from(string(entity->Attribute("from")));
 	fprintf(stderr, "Process not in roster presence %s.\n", from.JabberHandle().c_str());
@@ -714,7 +687,7 @@ JabberProtocol::ProcessPresence(XMLEntity *entity)
 	mainWindow->fRosterView->UnlinkUser(userId);
 	ProcessUserPresence(userId, entity);
 	mainWindow->fRosterView->LinkUser(userId);
-	//PostMessage(BLAB_UPDATE_ROSTER);			
+		
 }
 
 char **

@@ -31,7 +31,6 @@
 #include "ModalAlertFactory.h"
 #include "TalkManager.h"
 
-#define SSL_ENABLED	'ssl3'
 #define BOX_WIDTH BSize(fUsername->StringWidth("w")*36, B_SIZE_UNSET)
 
 BlabberMainWindow* BlabberMainWindow::fInstance = NULL;
@@ -56,7 +55,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				break;
 			}
 
-			HideLogin();
+			fLogin->SetEnabled(false);
 			
 			UserID username(fUsername->Text());
 			
@@ -77,6 +76,8 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 
 		case JAB_LOGGED_IN: 
 		{
+			HideLogin();
+
 			SetTitle((string("Chat − ") + UserID(string(jabber->jid.String())).JabberHandle()).c_str());
 			
 			fStatusView->SetMessage("gathering agents, roster and presence info");
@@ -121,16 +122,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			break;
 		}
 
-//		case BLAB_UPDATE_ROSTER:
-//		{
-//			Lock();
-//			fStatusView->SetMessage("roster updated.");
-//			fRosterView->UpdateRoster();
-//			Unlock();
-//			break;
-//		}
-		
-		
 		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:
 		case JAB_OPEN_CHAT:
 		{
@@ -251,9 +242,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				
 				if (user->UserType() == UserID::CONFERENCE && jabber->_storage_supported)
 				{
-//					JRoster::Instance()->Lock();
-//					JRoster::Instance()->RemoveUser(user);
-//					JRoster::Instance()->Unlock();
 					fRosterView->fUsers.erase(user->JabberHandle());
 					fRosterView->RemoveItem(item);
 					fRosterView->Invalidate();
@@ -516,13 +504,29 @@ BlabberMainWindow::ShowLogin()
 	fLogin->MakeDefault(true);
 	fMainView->Hide();
 	fLoginView->Show();
+	fLogin->SetEnabled(true);
 }
 
 void
 BlabberMainWindow::HideLogin()
 {
+	
+	BlabberSettings *settings = BlabberSettings::Instance();
+	
 	SetSizeLimits(100, 3000, 200, 3000);
 	fLogin->MakeDefault(false);
 	while (fMainView->IsHidden()) fMainView->Show();
 	while (!fLoginView->IsHidden()) fLoginView->Hide();
+	float main_window_width, main_window_height;
+	if (settings->Data("main-window-width") && settings->Data("main-window-height"))
+		{
+			main_window_width  = atof(settings->Data("main-window-width"));
+			main_window_height = atof(settings->Data("main-window-height"));
+		} 
+		else
+		{
+			main_window_width  = 210;
+			main_window_height = 432; 
+		}
+	ResizeTo(main_window_width,main_window_height);
 }
