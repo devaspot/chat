@@ -136,8 +136,8 @@ SSLAdapter::~SSLAdapter()
 void
 SSLAdapter::Close()
 {
+	SSL_free(ssl);
 	Socket::Close();
-	SSL_shutdown(ssl);
 	tls = false;
 	state = (SocketState)NONE;
 }
