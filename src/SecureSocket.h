@@ -38,7 +38,7 @@ class SSLAdapter : public Socket {
 			
 					SSL*		ssl;
 					SSL_CTX*	ctx;
-			
+					char		secureData[Socket::BUF];
 
 };
 

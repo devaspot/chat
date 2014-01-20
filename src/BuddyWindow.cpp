@@ -224,9 +224,6 @@ BuddyWindow::AddNewUser()
 		UserID* validated = BlabberMainWindow::Instance()->
 								fRosterView->fUsers[validating_user.JabberHandle()];
 								
-		//JRoster::Instance()->Lock();
-//		if (JRoster::Instance()->FindUser(JRoster::HANDLE, validating_user.JabberHandle()))
-
 		if (validated)
 		{
 
@@ -239,10 +236,8 @@ BuddyWindow::AddNewUser()
 			
 			_handle->MakeFocus(true);
 			
-			//JRoster::Instance()->Unlock();
 			return;
 		}
-		//JRoster::Instance()->Unlock();
 	}
 
 	

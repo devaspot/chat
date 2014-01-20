@@ -77,8 +77,7 @@ SSLAdapter::CleanupSSL()
 
 	CRYPTO_set_id_callback(NULL);
 	CRYPTO_set_locking_callback(NULL);
-	for (i=0; i<CRYPTO_num_locks(); i++)
-		delete lock_cs[i];
+	for (i=0; i<CRYPTO_num_locks(); i++) delete lock_cs[i];
 	OPENSSL_free(lock_cs);
 	
 	fprintf(stderr, "Cleanup SSL.\n");
@@ -91,34 +90,28 @@ SSLAdapter::StartTLS()
 {
 	state = (SocketState)NONE;
 	
-	if (ctx) {
-		SSL_CTX_free(ctx);
-		ctx = NULL;
-	}
+	if (ctx) { SSL_CTX_free(ctx); ctx = NULL; }
+	if (ssl) { SSL_free(ssl); 	  ssl = NULL; }
 	
 	ctx = SSL_CTX_new(TLSv1_client_method());
-	
-	if (ssl) {
-		SSL_free(ssl);
-		ssl = NULL;
-	}
-	
 	ssl = SSL_new(ctx);
 	
-	SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
-	SSL_set_fd(ssl, sock);
+	SSL_set_mode ( ssl, SSL_MODE_AUTO_RETRY );
+	SSL_set_fd   ( ssl, sock );
 	
 	int ret = SSL_connect(ssl);
+	
 	if (ret == 1)
 	{
 		state = (SocketState)CONNECTED;
 		tls = true;
 		return 1;
-	} else {
-		printf("SSL ERROR: %i %i\n",SSL_get_error(ssl,ret),ret);
 	}
-		
-	return 0;
+	else
+	{
+		printf("SSL CONN ERROR: %i %i\n",SSL_get_error(ssl,ret),ret);
+		return 0;
+	}
 }
 
 SSLAdapter::SSLAdapter():tls(false),ssl(NULL),ctx(NULL)
@@ -144,6 +137,7 @@ void
 SSLAdapter::Close()
 {
 	Socket::Close();
+	SSL_shutdown(ssl);
 	tls = false;
 	state = (SocketState)NONE;
 }
@@ -153,24 +147,26 @@ SSLAdapter::ReceiveData(BMessage *mdata)
 {
 	if (!tls) return Socket::ReceiveData(mdata);
 	
-	int LEN = 8024;
-	char data[LEN];
-	
-	int length = (int)SSL_read(ssl, data, LEN);
+	int ret = (int)SSL_read(ssl, secureData, Socket::BUF);
 		
-	if (length > 0) 
+	if (ret > 0) 
 	{
-		data[length] = 0;
-		mdata->AddString("data", data);
-		
-	}
+		secureData[ret] = 0;
+		mdata->AddString("data", secureData);
+		mdata->AddInt32("length", ret);
 
 #ifdef DEBUG
-	fprintf(stderr, "RECV SSL: %s\n", data);
+		fprintf(stderr, "RECV SSL: %s\n", secureData);
 #endif	
 
-	mdata->AddInt32("length", length);
-	return length;
+		return ret;
+		
+	}
+	else
+	{
+		printf("SSL READ ERROR: %i %i\n",SSL_get_error(ssl,ret),ret);
+		return 0;
+	}
 }
 
 int

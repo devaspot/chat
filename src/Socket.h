@@ -42,8 +42,8 @@ class Adapter
 class Socket : public Adapter
 {
 	public:
-
-
+		
+		static	const int	BUF = 8192;
 							
 							Socket() { }
 		virtual				~Socket();
@@ -60,7 +60,7 @@ class Socket : public Adapter
 				int			type;
 				int			proto;
 				SocketState	state;
-				
+				char	  	data[Socket::BUF];
 };
 
 #endif
