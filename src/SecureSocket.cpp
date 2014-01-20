@@ -96,7 +96,7 @@ SSLAdapter::StartTLS()
 		ctx = NULL;
 	}
 	
-	ctx = SSL_CTX_new(SSLv3_client_method());
+	ctx = SSL_CTX_new(TLSv1_client_method());
 	
 	if (ssl) {
 		SSL_free(ssl);
@@ -107,11 +107,15 @@ SSLAdapter::StartTLS()
 	
 	SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
 	SSL_set_fd(ssl, sock);
-	if (SSL_connect(ssl) == 1)
+	
+	int ret = SSL_connect(ssl);
+	if (ret == 1)
 	{
 		state = (SocketState)CONNECTED;
 		tls = true;
 		return 1;
+	} else {
+		printf("SSL ERROR: %i %i\n",SSL_get_error(ssl,ret),ret);
 	}
 		
 	return 0;
@@ -160,7 +164,11 @@ SSLAdapter::ReceiveData(BMessage *mdata)
 		mdata->AddString("data", data);
 		
 	}
-	
+
+#ifdef DEBUG
+	fprintf(stderr, "RECV SSL: %s\n", data);
+#endif	
+
 	mdata->AddInt32("length", length);
 	return length;
 }

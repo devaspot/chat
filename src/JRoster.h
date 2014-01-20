@@ -28,6 +28,7 @@ public:
 	static JRoster              *Instance();
 	                            ~JRoster();
 
+	void                         AddRosterUserRefresh(UserID *roster_user);
 	void                         AddRosterUser(UserID *roster_user);
 	void                         AddNewUser(UserID *new_user);
 	void                         RemoveUser(const UserID *removed_user);

@@ -82,7 +82,7 @@ class JabberProtocol : public XMLReader
 				void			JoinRoom(BString to, BString pass);
 				void			SendGroupPresence(string _group_room, string _group_username);
 				void			RequestRoomOptions(BString room);
-				
+				void			StartTLS();			
 				void			OnStartTag(XMLEntity *entity);
 				void			OnEndTag(XMLEntity *entity);
 				void			OnEndEntity(XMLEntity *entity);

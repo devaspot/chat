@@ -35,6 +35,13 @@ void
 JRoster::AddRosterUser(UserID *roster_user)
 {
 	_roster->push_back(roster_user);
+
+}
+
+void
+JRoster::AddRosterUserRefresh(UserID *roster_user)
+{
+	_roster->push_back(roster_user);
 	RefreshRoster();
 }
 

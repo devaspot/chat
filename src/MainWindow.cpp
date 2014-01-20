@@ -61,9 +61,12 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			
 			UserID username(fUsername->Text());
 			
-			if (username.JabberServer() == "gmail.com" || username.JabberServer() == "googlemail.com")
-				 jabber->SetConnection(BString("talk.google.com"), 443, true);
-			else jabber->SetConnection(BString(username.JabberServer().c_str()), 5223, true);
+				 if (username.JabberServer() == "gmail.com" || 
+				    username.JabberServer() == "googlemail.com")
+				    jabber->SetConnection(BString("talk.google.com"), 443, true);
+			else if (username.JabberServer() == "facebook.com") 
+				    jabber->SetConnection(BString("chat.facebook.com"), 5222, false);
+			else    jabber->SetConnection(BString(username.JabberServer().c_str()), 5222, false);
 				
 			jabber->SetCredentials(BString(username.JabberUsername().c_str()), 
 							BString(username.JabberServer().c_str()), BString(fPassword->Text()));

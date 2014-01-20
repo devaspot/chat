@@ -53,7 +53,7 @@ Socket::Open(BString host, int p)
 int
 Socket::SendData(BString xml)
 {
-	//fprintf(stderr, "SEND: %s\n", xml.String());
+	fprintf(stderr, "SEND: %s\n", xml.String());
 	return send(sock, xml.String(), xml.Length(), 0);
 }
 
@@ -69,7 +69,7 @@ Socket::ReceiveData(BMessage *message)
 		message->AddString("data", BString(data));
 		message->AddInt32("length", length);
 	}
-	//fprintf(stderr, "RECV: %s\n", data);
+	fprintf(stderr, "RECV: %s\n", data);
 	return length;
 }
 

@@ -120,19 +120,17 @@ JabberProtocol::OnEndTag(XMLEntity *entity)
 void
 JabberProtocol::OnEndEntity(XMLEntity *entity)
 {
-	
 }
 
 void
 JabberProtocol::OnTag(XMLEntity *entity)
 {
-	char buffer[4096]; // general buffer space
+	char buffer[4096];
 	static int seen_streams = 0;
 
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "iq"))
 	{
 		
-		// handle roster retrival
 		if (entity->Child("query") && entity->Child("query")->Attribute("xmlns") &&
 			!strcasecmp(entity->Child("query")->Attribute("xmlns"),"jabber:iq:roster"))
 		{
@@ -140,7 +138,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 			return;
 		}
 		
-		// handle session retrival
 		if (entity->Attribute("id") && entity->Attribute("type") &&
 			!strcasecmp(entity->Attribute("type"), "result") &&
 			!strcasecmp(entity->Attribute("id"), "sess_1"))
@@ -154,7 +151,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 			return;
 		}
 		
-		// handle binding retrival
 		if (entity->Attribute("id") && entity->Attribute("type") &&
 			!strcasecmp(entity->Attribute("type"), "result") &&
 			!strcasecmp(entity->Attribute("id"), "bind_0"))
@@ -260,7 +256,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 				iq_id = BString(entity->Attribute("id"));
 			}
 			
-			// handle version request
 			XMLEntity *query = entity->Child("query");
 			if (query && query->Attribute("xmlns")) {
 				if (!strcasecmp(query->Attribute("xmlns"), "jabber:iq:version")) {
@@ -268,7 +263,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 				}
 			}
 			
-			// handle version request
 			query = entity->Child("ping");
 			if (query && query->Attribute("xmlns")) {
 				if (!strcasecmp(query->Attribute("xmlns"), "urn:xmpp:ping"))
@@ -284,7 +278,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		return;
 	}
 	
-	// handle authorization success
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "success"))
 	{
 		InitSession();
@@ -293,7 +286,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		
 	}
 	
-	// handle presence messages
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "presence"))
 	{
 		ProcessPresence(entity);
@@ -301,7 +293,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		return;
 	}
 	
-	// handle stream error
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "stream:error")) {
 		sprintf(buffer, "An stream error has occurred.");
 		ModalAlertFactory::Alert(buffer, "Sorry", NULL, NULL, B_WIDTH_AS_USUAL, B_STOP_ALERT); 
@@ -311,7 +302,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		return;
 	}
 	
-	// handle stream error
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "stream:features"))
 	{
 		mainWindow->Lock();
@@ -335,27 +325,22 @@ JabberProtocol::OnTag(XMLEntity *entity)
 				Disconnect();
 			}
 		}
-		else if (entity->Child("mechanisms"))
-			Authorize();
-		else if (entity->Child("bind"))
-			Bind();
-		else if (entity->Child("session"))
-			Session();
+		else {
+				 if (entity->Child("starttls"))   { StartTLS();	return; }
+			else if (entity->Child("mechanisms"))	Authorize();	
+			else if (entity->Child("bind"))			Bind();
+			else if (entity->Child("session"))		Session();
+		}
 			
 		return;
 		
 	}
 	
-	// handle failures
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "failure")) {
-		if (entity->Child("not-authorized") != NULL)
-			sprintf(buffer, "Not authorized failure.");
-		else if (entity->Child("invalid-mechanism") != NULL)
-			sprintf(buffer, "Invalid mechanism failure.");
-		else if (entity->Child("invalid-authzid") != NULL)
-			sprintf(buffer, "Invalid authorization Id.");
-		else
-			sprintf(buffer, "An failure occured.");
+			 if (entity->Child("not-authorized") != NULL)	 sprintf(buffer, "Not authorized failure.");
+		else if (entity->Child("invalid-mechanism") != NULL) sprintf(buffer, "Invalid mechanism failure.");
+		else if (entity->Child("invalid-authzid") != NULL)	 sprintf(buffer, "Invalid authorization Id.");
+		else 												 sprintf(buffer, "An failure occured.");
 			
 		ModalAlertFactory::Alert(buffer, "Sorry", NULL, NULL, B_WIDTH_AS_USUAL, B_STOP_ALERT); 
 		
@@ -364,7 +349,6 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		return;
 	}
 	
-	// handle disconnection
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "stream:stream"))
 	{
 		++seen_streams;
@@ -374,13 +358,17 @@ JabberProtocol::OnTag(XMLEntity *entity)
 		return;
 	}
 	
-	// handle incoming messages
+	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "proceed"))
+	{
+		secure = true;
+		socketAdapter->StartTLS();
+		InitSession();
+		return;
+	}
+	
 	if (entity->IsCompleted() && !strcasecmp(entity->Name(), "message"))
 	{
-		//TalkManager::Instance()->Lock();
 		TalkManager::Instance()->ProcessMessageData(entity);
-		//TalkManager::Instance()->Unlock();
-		
 		return;
 	}
 	
@@ -415,9 +403,6 @@ JabberProtocol::SendUserRegistration(BString username, BString password, BString
 	entity_query->AddChild("password", NULL, password.String());
 	entity_query->AddChild("resource", NULL, resource.String());
 
-	// log command
-	//_iq_map[atts_iq[1]] = NEW_USER;
-	
 	// send XML command
 	char *str = entity_iq->ToString();
 	socketAdapter->SendData(BString(str));
@@ -538,7 +523,6 @@ JabberProtocol::JoinRoom(BString to, BString password)
 	BString xml = "<presence to='";
 	xml = xml.Append(to);
 	xml << "'><priority>5</priority>";
-	//xml << "<c xmlns='http://jabber.org/protocol/caps' node='http://dengon.berlios.de/caps' ver='1.0'/>";
 	xml << "<x xmlns='http://jabber.org/protocol/muc'>";
 	if (password.Length() > 0)
 	{
@@ -698,29 +682,29 @@ JabberProtocol::ProcessPresence(XMLEntity *entity)
 				msg->what = JAB_GROUP_CHATTER_OFFLINE;
 			}
 			
-			TalkManager::Instance()->Lock();
+//			TalkManager::Instance()->Lock();
 			
 			ChatWindow *window = TalkManager::Instance()->FindWindow(from.JabberHandle());
 			
 			if (window != NULL)
 			{
-				fprintf(stderr, "Process group presence %s.\n", window->GetUserID()->JabberHandle().c_str());
+//				fprintf(stderr, "Process group presence %s.\n", window->GetUserID()->JabberHandle().c_str());
 				
 				window->PostMessage(msg);
 			}
 			else
 			{
-				fprintf(stderr, "There is no window group presence route to.\n");
+//				fprintf(stderr, "There is no window group presence route to.\n");
 			}
 			
-			TalkManager::Instance()->Unlock();
+//			TalkManager::Instance()->Unlock();
 			
 			return;
 		}		
 		
 		JRoster *roster = JRoster::Instance();
 		
-		roster->Lock();
+//		roster->Lock();
 		
 		for (JRoster::ConstRosterIter i = roster->BeginIterator(); i != roster->EndIterator(); ++i)
 		{
@@ -743,7 +727,7 @@ JabberProtocol::ProcessPresence(XMLEntity *entity)
 			ProcessUserPresence(&user, entity);
 		}
 			
-		roster->Unlock();
+//		roster->Unlock();
 		
 		mainWindow->PostMessage(BLAB_UPDATE_ROSTER);			
 
@@ -914,17 +898,6 @@ JabberProtocol::SendUnsubscriptionRequest(string username)
 void
 JabberProtocol::AddToRoster(UserID *new_user)
 {
-	/*
-	<iq from='juliet@example.com/balcony' type='set' id='roster_2'>
-     <query xmlns='jabber:iq:roster'>
-       <item jid='nurse@example.com'
-             name='Nurse'>
-         <group>Servants</group>
-       </item>
-     </query>
-   </iq>
-   */
-   
 	BString xml = "<iq type='set'>"
 		"<query xmlns='jabber:iq:roster'>"
 		"<item jid='";
@@ -956,7 +929,6 @@ JabberProtocol::RemoveFromRoster(UserID *removed_user)
 	char **atts_query = CreateAttributeMemory(2);
 	char **atts_item  = CreateAttributeMemory(6);
 	
-	// assemble attributes
 	strcpy(atts[0], "type");
 	strcpy(atts[1], "set");
 	strcpy(atts[2], "id");
@@ -979,10 +951,6 @@ JabberProtocol::RemoveFromRoster(UserID *removed_user)
 	entity_query->AddChild(entity_item);
 	entity->AddChild(entity_query);
 
-	// log command
-	//_iq_map[atts[3]] = ROSTER;
-
-	// send XML command
 	char *str = entity->ToString();
 	socketAdapter->SendData(BString(str));
 	free(str);
@@ -1380,7 +1348,8 @@ JabberProtocol::ReceiveData(BMessage *msg)
 	
 	// TODO: handle XML head more accurately
 	
-	msgData.RemoveFirst("<?xml version='1.0'?>").Append("</dengon>").Prepend("<dengon>");
+	msgData.RemoveFirst("<?xml version='1.0'?>")
+		   .RemoveFirst("<?xml version='1.0' ?>").Append("</dengon>").Prepend("<dengon>");
 					
 	msg->AddInt32("length", msgData.Length());
 	msg->AddString("data", msgData);
@@ -1424,32 +1393,16 @@ JabberProtocol::ReceivedMessageHandler(BMessage *msg)
 void
 JabberProtocol::SendMessage(BString to, BString text)
 {
-	/*
-	BString xml = "<message type='chat' to='";
-	xml = xml.Append(to);
-	xml << "'><body>";
-	xml = xml.Append(text);
-	xml << "</body></message>";
-	
-	socketAdapter->SendData(xml);
-	*/
-	
 	XMLEntity   *entity;
 	char **atts = CreateAttributeMemory(4);
 
-	// assemble attributes;
 	strcpy(atts[0], "to");
 	strcpy(atts[1], to.String());
 	strcpy(atts[2], "type");
 	strcpy(atts[3], "chat");
 	
-	// construct XML tagset
 	entity = new XMLEntity("message", (const char **)atts);
-
 	entity->AddChild("body", NULL, text.String());
-	//entity->AddChild("thread", NULL, thread_id.c_str());
-
-	// send XML command
 	char *str = entity->ToString();
 	socketAdapter->SendData(str);
 	free(str);
@@ -1462,30 +1415,17 @@ JabberProtocol::SendMessage(BString to, BString text)
 void
 JabberProtocol::SendGroupchatMessage(BString to, BString text)
 {
-	/*
-	BString xml = "<message type='groupchat' to='";
-	xml = xml.Append(to);
-	xml << "'><body>";
-	xml = xml.Append(text);
-	xml << "</body></message>";
-	
-	socketAdapter->SendData(xml);
-	*/
 	XMLEntity   *entity;
 	char **atts = CreateAttributeMemory(4);
 
-	// assemble attributes;
 	strcpy(atts[0], "to");
 	strcpy(atts[1], to.String());
 	strcpy(atts[2], "type");
 	strcpy(atts[3], "groupchat");
 	
-	// construct XML tagset
 	entity = new XMLEntity("message", (const char **)atts);
-
 	entity->AddChild("body", NULL, text.String());
 
-	// send XML command
 	char *str = entity->ToString();
 	socketAdapter->SendData(str);
 	free(str);
@@ -1548,15 +1488,6 @@ JabberProtocol::SendMUCConferenceRequest(BString conference)
 void
 JabberProtocol::SendMUCRoomRequest(BString room)
 {
-	/*
-		<iq from='hag66@shakespeare.lit/pda'
-    	id='disco3'
-    	to='darkcave@chat.shakespeare.lit'
-    	type='get'>
-  		<query xmlns='http://jabber.org/protocol/disco#info'/>
-		</iq>
-	*/
-	
 	BString xml = "<iq from='";
 	xml = xml.Append(jid);
 	xml << "' id='disco3' to='";
@@ -1623,6 +1554,14 @@ JabberProtocol::BeginSession()
 	return false;
 }
 
+void
+JabberProtocol::StartTLS()
+{
+	printf("Start TLS recieved\n");
+	BString xml = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>";
+	socketAdapter->SendData(xml);
+}
+
 // SASL PLAIN
 
 bool
@@ -1630,7 +1569,14 @@ JabberProtocol::Authorize()
 {
 	int length = (strlen(user.String())*2)+strlen(domain.String())+strlen(pass.String())+3;
 	char credentials[length];
-	sprintf(credentials, "%s@%s%c%s%c%s", user.String(), domain.String(), '\0', user.String(), '\0', pass.String());
+	
+	printf("User: %s\n",user.String());
+	printf("Domain: %s\n",domain.String());
+	
+		 if	(domain.String()=="facebook.com")
+		 sprintf(credentials, "%c%s%c%s", '\0',user.String(),  '\0', pass.String());
+	else sprintf(credentials, "%s@%s%c%s%c%s", user.String(), domain.String(), '\0',
+											   user.String(), '\0', pass.String());
 	
 	BString xml = "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>";
 	
