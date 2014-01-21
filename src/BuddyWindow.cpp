@@ -10,12 +10,15 @@
 #include "BuddyWindow.h"
 #include <cstdio>
 #include <Application.h>
+#include <LayoutBuilder.h>
 #include "Settings.h"
 #include "GenericFunctions.h"
 #include "Messages.h"
 #include "ModalAlertFactory.h"
 #include "TalkManager.h"
 #include <strings.h>
+
+#define BOX_WIDTH BSize(_realname->StringWidth("w")*20, B_SIZE_UNSET)
 
 BuddyWindow *BuddyWindow::_instance = NULL;
 
@@ -66,68 +69,66 @@ BuddyWindow::SetUser(UserID *user)
 		_full_view->RemoveChild(_room_nick);
 	}
 	
-	if (userID)
-		_ok->SetLabel("Save");
-	else
-		_ok->SetLabel("Create");
+	if (userID) _ok->SetLabel("Save");
+	else _ok->SetLabel("Create");
 }
 
 BuddyWindow::BuddyWindow(BRect frame, UserID *user)
-	: BWindow(frame, "Item", B_TITLED_WINDOW, B_NOT_RESIZABLE | B_NOT_ZOOMABLE)
+	:
+	BWindow(frame, "Item", B_TITLED_WINDOW, B_NOT_RESIZABLE)
 {
 
-	BRect rect;
-
-	rect = Bounds();
-	rect.OffsetTo(B_ORIGIN);
-	
-	_full_view = new BView(rect, NULL, B_FOLLOW_ALL, B_WILL_DRAW);
+	_full_view = new BView(Bounds(), NULL, B_FOLLOW_ALL, B_WILL_DRAW);
 	_full_view->SetViewColor(216, 216, 216, 255);
 	
-	rect.OffsetTo(B_ORIGIN);
-	rect.InsetBy(10.0, 12.0);
-	
-	rect.bottom = rect.top + 18;
-	_realname = new BTextControl(rect, "realname", "Title Name:", NULL, NULL, B_FOLLOW_ALL_SIDES);
-	_realname->SetDivider(_realname->Divider() - 75);
+	_realname = new BTextControl("Title Name:", "", NULL);
 	_realname->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
 	
-	rect.OffsetBy(0.0, 23.0);
-	_handle = new BTextControl(rect, "handle", "JID:", NULL, NULL, B_FOLLOW_ALL_SIDES);
-	_handle->SetDivider(_handle->Divider() - 75);
+	_handle = new BTextControl("JID:", "", NULL);
 	_handle->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
 	
-	rect.OffsetBy(0.0, 23.0);
 	_chat_services_selection = new BPopUpMenu("Simple");
-	_chat_services = new BMenuField(rect, "chat_services", "Item Type:", _chat_services_selection);	
-	_chat_services->SetDivider(_chat_services->Divider() - 75);
-	_chat_services->SetAlignment(B_ALIGN_RIGHT);
+	_chat_services = new BMenuField("Item Type:", _chat_services_selection);	
 	_chat_services_selection->AddItem(new BMenuItem("User", new BMessage(AGENT_MENU_CHANGED_TO_JABBER)));
 	_chat_services_selection->AddItem(new BMenuItem("Conference", new BMessage(AGENT_MENU_CHANGED_TO_JABBER_CONFERENCE)));
 	_chat_services_selection->FindItem("User")->SetMarked(true);
 	
-	{
-		rect.OffsetBy(0.0, 24.0);
-		_room_nick = new BTextControl(rect, "nick_room", "Room Nick:", NULL, NULL, B_FOLLOW_ALL_SIDES);
-		_room_nick->SetDivider(_room_nick->Divider() - 75);
-		_room_nick->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
-	}
+	_room_nick = new BTextControl("Room Nick:", "", NULL);
+	_room_nick->SetDivider(_room_nick->Divider() - 75);
+	_room_nick->SetAlignment(B_ALIGN_RIGHT, B_ALIGN_LEFT);
 	
-	rect.OffsetBy(220.0, 55.0);
-	rect.right = rect.left + 92;
-
-	_ok = new BButton(rect, "ok", "", new BMessage(JAB_OK));
+	_ok = new BButton(Bounds(), "ok", "", new BMessage(JAB_OK));
 	_ok->MakeDefault(true);
 	_ok->SetTarget(this);
 	
-	_full_view->AddChild(_realname);
-	_full_view->AddChild(_handle);
-	_full_view->AddChild(_chat_services);
-	_full_view->AddChild(_room_nick);
-	_full_view->AddChild(_ok);
+	BLayoutItem* fUsernameBox = _realname->CreateTextViewLayoutItem();
+	fUsernameBox->SetExplicitMinSize(BOX_WIDTH);
+	
+	BLayoutBuilder::Group<>(_full_view, B_VERTICAL, 0)
+		.SetInsets(B_USE_DEFAULT_SPACING)
+		.AddGlue()
+		.AddGrid(B_USE_DEFAULT_SPACING, B_USE_SMALL_SPACING)
+			.Add(_realname->CreateLabelLayoutItem(), 0, 0)
+			.Add(_realname->CreateTextViewLayoutItem(), 1, 0)
+			.Add(_handle->CreateLabelLayoutItem(), 0, 1)
+			.Add(_handle->CreateTextViewLayoutItem(), 1, 1)
+			.Add(_chat_services, 1, 2)
+			.Add(_room_nick, 1, 3)
+		.End()
+		.AddGlue()
+		.AddGroup(B_HORIZONTAL)
+			.AddGlue()
+			.Add(_ok)
+		.End()
+		.AddGlue()
+		.View();
+		
 	AddChild(_full_view);
 
 	_realname->MakeFocus(true);
+	
+	int width = ceilf(BOX_WIDTH.width*1.7);
+	SetSizeLimits(width, width, 250, 250);
 }
 
 void
