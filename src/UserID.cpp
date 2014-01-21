@@ -195,7 +195,12 @@ void UserID::_ProcessHandle()
 		_jabber_resource  = "";
 
 		// extract abbreviated username (text between start of username and @)
-		squigly_pos = _handle.rfind("@");
+		squigly_pos = _handle.find("@");
+
+		if (squigly_pos == std::string::npos) {
+			_jabber_username = _handle;
+			return;
+		}
 
 		if (squigly_pos != std::string::npos && squigly_pos != 0) {
 			// extract the abbreviated username
@@ -204,7 +209,8 @@ void UserID::_ProcessHandle()
 		} else {
 			return;
 		}
-
+		
+		
 		// is there still reason to go on (is there more text)?
 		if ((_handle.size() - 1) != squigly_pos) {
 			// extract server name (text between @ and /)

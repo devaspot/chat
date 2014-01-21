@@ -13,6 +13,8 @@
 #include <Button.h>
 #include <CheckBox.h>
 #include <MenuItem.h>
+#include <MenuField.h>
+#include <PopUpMenu.h>
 #include <GridView.h>
 #include <TextControl.h>
 #include <Window.h>
@@ -20,50 +22,55 @@
 #include "JabberProtocol.h"
 #include "RosterView.h"
 #include "StatusView.h"
+#include "Messages.h"
 
 class BlabberMainWindow : public BWindow {
 
 public:
 
-	static BlabberMainWindow  *Instance();
-	                          ~BlabberMainWindow();
+	static	BlabberMainWindow  	*Instance();
+	                          	~BlabberMainWindow();
 
-	virtual void               MessageReceived(BMessage *msg);
-	virtual void               MenusBeginning();
-	virtual	void		       FrameResized(float width, float height);
-	virtual bool               QuitRequested();
+	virtual void               	MessageReceived(BMessage *msg);
+	virtual void               	MenusBeginning();
+	virtual	void		       	FrameResized(float width, float height);
+	virtual bool               	QuitRequested();
 
-	bool                       ValidateLogin();
-	void                       ShowLogin();
-	void                       HideLogin();
-	JabberProtocol*            jabber;
-	BCheckBox*                 fNewAccount;
-	RosterView*                fRosterView;
-	StatusView*                fStatusView;
+			bool               	ValidateLogin();
+			void               	ShowLogin();
+			void               	HideLogin();
+			JabberProtocol*    	jabber;
+			BCheckBox*         	fNewAccount;
+			RosterView*        	fRosterView;
+			StatusView*        	fStatusView;
+			int					jabber_code;
 		
 protected:
-	                           BlabberMainWindow(BRect frame);
+	                           	BlabberMainWindow(BRect frame);
 		                           
 private:
 
-	static BlabberMainWindow*  fInstance;
+	static	BlabberMainWindow*  fInstance;
 	
-	BView*                     fMainView;
-	BCheckBox*                 fAutoLogin;
-	BButton*                   fLogin;
-	BTextControl*              fUsername;
-	BTextControl*              fPassword;
-	BView*                     fLoginView;
-	BScrollView*               fRosterScroller;
+			BView*              fMainView;
+			BCheckBox*          fAutoLogin;
+			BButton*            fLogin;
+			BTextControl*       fUsername;
+			BTextControl*       fPassword;
+			BView*              fLoginView;
+			BScrollView*        fRosterScroller;
 	
-	BMenuBar*                  fMenuBar;
-	BMenu*                     fFile;
-	BMenu*                     fEdit;
-	BMenuItem*                 fDisconnect;
-	BMenuItem*                 fAbout;
-	BMenuItem*                 fQuit;
-	BMenuItem*                 fAddBuddy;
-	BMenuItem*                 fPreferences;
+			BMenuBar*           fMenuBar;
+			BMenu*              fFile;
+			BMenu*              fEdit;
+			BMenuItem*          fDisconnect;
+			BMenuItem*          fAbout;
+			BMenuItem*          fQuit;
+			BMenuItem*          fAddBuddy;
+			BMenuItem*          fPreferences;
+	
+			BMenuField*			jabber_type_menu;
+			BPopUpMenu*			jabber_type;
 };
 
 #endif

@@ -31,7 +31,7 @@
 #include "ModalAlertFactory.h"
 #include "TalkManager.h"
 
-#define BOX_WIDTH BSize(fUsername->StringWidth("w")*36, B_SIZE_UNSET)
+#define BOX_WIDTH BSize(fUsername->StringWidth("w")*30, B_SIZE_UNSET)
 
 BlabberMainWindow* BlabberMainWindow::fInstance = NULL;
 
@@ -47,6 +47,13 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 	static bool reported_info = false;
 	
 	switch (msg->what) {
+		
+		case JAB_COMMON:
+		case JAB_FACEBOOK:
+		case JAB_GOOGLE:
+			jabber_code = msg->what;
+			printf("Flavour Changed: %x\n", jabber_code);
+			break;
 
 		case JAB_CONNECT:
 		case JAB_LOGIN: {
@@ -59,17 +66,54 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			
 			UserID username(fUsername->Text());
 			
-				 if (username.JabberServer() == "gmail.com" || 
-				    username.JabberServer() == "googlemail.com" ||
-				    username.JabberServer() == "synrc.com"	)
-				    jabber->SetConnection(BString("talk.google.com"), 443, true);
-			else if (username.JabberServer() == "facebook.com") 
-				    jabber->SetConnection(BString("chat.facebook.com"), 5222, false);
-			else    jabber->SetConnection(BString(username.JabberServer().c_str()), 5223, true);
-				
-			jabber->SetCredentials(BString(username.JabberUsername().c_str()), 
-							BString(username.JabberServer().c_str()), BString(fPassword->Text()));
-							
+			switch (jabber_code)
+			{
+				case JAB_COMMON:
+					
+					jabber->SetConnection(
+						BString(username.JabberServer().c_str()), 5223, true);
+						
+					jabber->SetCredentials(
+						BString(username.JabberUsername().c_str()), 
+						BString(username.JabberServer().c_str()), BString(fPassword->Text()));
+						
+					break;
+					
+				case JAB_FACEBOOK:
+
+					jabber->SetConnection(
+						BString("chat.facebook.com"), 5222, false);
+
+					printf("Facebook User Part: '%s'\n", username.JabberHandle().c_str());
+										
+					jabber->SetCredentials(
+						BString(username.JabberHandle().c_str()), 
+						BString("facebook.com"), BString(fPassword->Text()));
+						
+					break;
+					
+				case JAB_GOOGLE:
+				{
+
+					jabber->SetConnection(
+						BString("talk.google.com"), 443, true);
+					
+					printf("Google User Part: '%s'\n", username.JabberUsername().c_str());
+					printf("Google Server Part: '%s'\n", username.JabberServer().c_str());
+					
+					BString serverPart(username.JabberServer().c_str());
+					
+					jabber->SetCredentials(
+						BString(username.JabberUsername().c_str()), 
+						serverPart.IsEmpty() ? BString("gmail.com") : serverPart,
+						BString(fPassword->Text()));
+				}		
+					break;
+					
+				default:
+					break;
+			}
+			
 			jabber->LogOn();
 			
 			break;
@@ -351,7 +395,7 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	
 	fUsername = new BTextControl("JID: ", "", NULL);
 	fUsername->SetEnabled(true);
-	fPassword = new BTextControl("Password: ", "", NULL);
+	fPassword = new BTextControl("Account Password: ", "", NULL);
 	fPassword->TextView()->HideTyping(true);
 	fNewAccount = new BCheckBox(Bounds(), NULL, "Register Account", NULL, B_FOLLOW_LEFT);
 	fNewAccount->SetEnabled(true);
@@ -364,14 +408,22 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fLoginView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(fLoginView);
 	
-	BLayoutItem* fUsernameBox = fUsername->CreateTextViewLayoutItem();
-	fUsernameBox->SetExplicitMinSize(BOX_WIDTH);
+	BLayoutItem* right = fUsername->CreateTextViewLayoutItem();
+	right->SetExplicitMinSize(BOX_WIDTH);
+	
+	jabber_type = new BPopUpMenu("");
+	jabber_type_menu = new BMenuField("", jabber_type);	
+	jabber_type->AddItem(new BMenuItem("XMPP", 		new BMessage(JAB_COMMON)));
+	jabber_type->AddItem(new BMenuItem("Facebook",	new BMessage(JAB_FACEBOOK)));
+	jabber_type->AddItem(new BMenuItem("Google", 	new BMessage(JAB_GOOGLE)));
+	jabber_type->FindItem("Facebook")->SetMarked(true);
+	jabber_code = JAB_FACEBOOK;
 	
 	BLayoutBuilder::Group<>(fLoginView, B_VERTICAL, 0)
 		.SetInsets(B_USE_DEFAULT_SPACING)
 		.AddGlue()
 		.AddGrid(B_USE_DEFAULT_SPACING, B_USE_SMALL_SPACING)
-			.Add(fUsername->CreateLabelLayoutItem(), 0, 0)
+			.Add(jabber_type_menu, 0, 0)
 			.Add(fUsername->CreateTextViewLayoutItem(), 1, 0)
 			.Add(fPassword->CreateLabelLayoutItem(), 0, 1)
 			.Add(fPassword->CreateTextViewLayoutItem(), 1, 1)
@@ -485,7 +537,7 @@ BlabberMainWindow::Instance()
 void
 BlabberMainWindow::ShowLogin()
 {
-	int width = ceilf(BOX_WIDTH.width*1.35);
+	int width = ceilf(BOX_WIDTH.width*1.6);
 	SetSizeLimits(width, width, 250, 250);
 	fLogin->MakeDefault(true);
 	fMainView->Hide();

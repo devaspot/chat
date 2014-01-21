@@ -14,6 +14,11 @@
 #define JAB_OK                          0x12000000
 #define JAB_CANCEL                      0x12000FFF
 
+// flavours
+#define JAB_COMMON                      0x12000001
+#define JAB_FACEBOOK                    0x12000002
+#define JAB_GOOGLE                      0x12000003
+
 // GUI
 #define JAB_CLOSE                       0x13000000
 #define JAB_ABOUT                       0x13003333

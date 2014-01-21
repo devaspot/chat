@@ -437,8 +437,6 @@ JabberProtocol::SaveConference(UserID *conference)
 	BString xml ="<iq type='set' id='save_conferences'>"
 		"<query xmlns='jabber:iq:private'>"
 		"<storage xmlns='storage:bookmarks'>";
-		
-
 			
 	int count = mainWindow->fRosterView->GetConferencesCount();
 	bool seen = false;
@@ -1072,13 +1070,11 @@ JabberProtocol::ProcessUserPresence(UserID *user, XMLEntity *entity)
 void
 JabberProtocol::ParseStorage(XMLEntity *storage)
 {
-	//JRoster::Instance()->Lock();
-	
+
 	for (int i=0; i<storage->CountChildren(); ++i)
 	{
 		UserID user(string(storage->Child(i)->Attribute("jid")));
 		UserID *roster_user = mainWindow->fRosterView->fUsers[user.JabberHandle()];
-								//JRoster::Instance()->FindUser(&user);
 		
 		if (roster_user)
 		{
@@ -1088,8 +1084,6 @@ JabberProtocol::ParseStorage(XMLEntity *storage)
 		{
 			fprintf(stderr, "Added conference %s to roster.\n", user.JabberHandle().c_str());
 			roster_user = new UserID(user.JabberHandle());
-			//JRoster::Instance()->AddRosterUser(roster_user);
-			
 		}
 		
 		roster_user->SetFriendlyName(string(storage->Child(i)->Attribute("name")));
@@ -1104,8 +1098,6 @@ JabberProtocol::ParseStorage(XMLEntity *storage)
 			
 	}
 	
-	//JRoster::Instance()->Unlock();
-	//JRoster::Instance()->RefreshRoster();
 }
 
 void
@@ -1119,8 +1111,6 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 	} else {
 		return;
 	}
-	
-	//JRoster::Instance()->Lock();
 	
 	for (int i=0; i<entity->CountChildren(); ++i)
 	{
@@ -1141,9 +1131,6 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 			// set subscription status
 			if (entity->Child(i)->Attribute("subscription"))
 			{
-				//fprintf(stderr, "User %s subscription status: %s.\n", user.JabberHandle().c_str(),
-				//	entity->Child(i)->Attribute("subscription"));
-					
 				user.SetSubscriptionStatus(string(entity->Child(i)->Attribute("subscription")));
 			}
 			
@@ -1172,8 +1159,6 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 
 			UserID *roster_user = BlabberMainWindow::Instance()->fRosterView->
 							fUsers[user.JabberHandle()];
-							
-								//JRoster::Instance()->FindUser(&user);
 			
 			if (roster_user) 
 			{
@@ -1239,8 +1224,6 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 				roster_user->SetOnlineStatus(user.OnlineStatus());
 				roster_user->SetUsertype(user.UserType());
 								
-				//JRoster::Instance()->AddRosterUser(roster_user);
-				
 				mainWindow->fRosterView->LinkUser(roster_user, false);
 				mainWindow->fRosterView->fUsers[roster_user->JabberHandle()] = roster_user;
 				
@@ -1253,10 +1236,6 @@ JabberProtocol::ParseRosterList(XMLEntity *iq_roster_entity)
 		}
 	}
 	
-	//JRoster::Instance()->Unlock();
-
-	//JRoster::Instance()->RefreshRoster();
-
 	mainWindow->Lock();
 	mainWindow->fStatusView->SetMessage("roster updated.");
 	mainWindow->Unlock();
@@ -1315,8 +1294,9 @@ JabberProtocol::ReceiveData(BMessage *msg)
 		
 	} while (FXMLCheck(msgData.String()) == NULL && 
 				!found_stream_start && !found_stream_end);
-	
+
 	// TODO: handle XML head more accurately
+	//		 should be fixed in XMLReader base class
 	
 	msgData.RemoveFirst("<?xml version='1.0'?>")
 		   .RemoveFirst("<?xml version='1.0' ?>").Append("</dengon>").Prepend("<dengon>");
@@ -1540,10 +1520,11 @@ JabberProtocol::Authorize()
 	int length = (strlen(user.String())*2)+strlen(domain.String())+strlen(pass.String())+3;
 	char credentials[length];
 	
+	printf("Host: %s\n",host.String());
 	printf("User: %s\n",user.String());
 	printf("Domain: %s\n",domain.String());
 	
-		 if	(domain.String()=="facebook.com")
+	     if (domain.String()=="facebook.com")
 		 sprintf(credentials, "%c%s%c%s", '\0',user.String(),  '\0', pass.String());
 	else sprintf(credentials, "%s@%s%c%s%c%s", user.String(), domain.String(), '\0',
 											   user.String(), '\0', pass.String());
