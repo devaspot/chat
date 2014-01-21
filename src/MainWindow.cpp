@@ -56,11 +56,13 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 		case JAB_FACEBOOK:
 			jabber_code = msg->what;
 			fNewAccount->SetEnabled(false);
+			fNewAccount->SetValue(B_CONTROL_OFF);
 			break;
 			
 		case JAB_GOOGLE:
 			jabber_code = msg->what;
 			fNewAccount->SetEnabled(false);
+			fNewAccount->SetValue(B_CONTROL_OFF);
 			break;
 
 		case JAB_CONNECT:
@@ -85,9 +87,6 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 						BString(username.JabberUsername().c_str()), 
 						BString(username.JabberServer().c_str()), BString(fPassword->Text()));
 						
-					fNewAccount->SetValue(B_CONTROL_ON);
-					fNewAccount->Invalidate();
-						
 					break;
 					
 				case JAB_FACEBOOK:
@@ -100,10 +99,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 					jabber->SetCredentials(
 						BString(username.JabberHandle().c_str()), 
 						BString("facebook.com"), BString(fPassword->Text()));
-						
-					fNewAccount->SetEnabled(false);
-					fNewAccount->SetValue(B_CONTROL_OFF);
-						
+					
 					break;
 					
 				case JAB_GOOGLE:
@@ -117,15 +113,11 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 					
 					BString serverPart(username.JabberServer().c_str());
 
-										
 					jabber->SetCredentials(
 						BString(username.JabberUsername().c_str()), 
 						serverPart.IsEmpty() ? BString("gmail.com") : serverPart,
 						BString(fPassword->Text()));
 						
-					fNewAccount->SetEnabled(false);
-					fNewAccount->SetValue(B_CONTROL_OFF);
-
 				}		
 					break;
 					
