@@ -35,6 +35,7 @@ public:
 	virtual void               	MenusBeginning();
 	virtual	void		       	FrameResized(float width, float height);
 	virtual bool               	QuitRequested();
+			void				SaveConfig();
 
 			bool               	ValidateLogin();
 			void               	ShowLogin();
@@ -44,6 +45,8 @@ public:
 			RosterView*        	fRosterView;
 			StatusView*        	fStatusView;
 			int					jabber_code;
+			std::map<std::string,int> codes;
+			BString				flavour;
 		
 protected:
 	                           	BlabberMainWindow(BRect frame);

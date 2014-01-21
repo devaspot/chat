@@ -324,8 +324,9 @@ JabberProtocol::OnTag(XMLEntity *entity)
 				Disconnect();
 			}
 		}
-		else {
-				 if (entity->Child("starttls"))   { StartTLS();	return; }
+		else
+		{
+				 if (entity->Child("starttls"))     StartTLS();
 			else if (entity->Child("mechanisms"))	Authorize();	
 			else if (entity->Child("bind"))			Bind();
 			else if (entity->Child("session"))		Session();
@@ -715,9 +716,11 @@ JabberProtocol::Disconnect()
 	mainWindow->ShowLogin();
 	mainWindow->Unlock();
 	
-	BString xml = "</stream:stream>";
-	socketAdapter->SendData(xml);
+	//BString xml = "</stream:stream>";
+	//socketAdapter->SendData(xml);
 	socketAdapter->Close();
+	//delete socketAdapter;
+	//socketAdapter = new SSLAdapter();
 	
 	release_sem(logged);
 	suspend_thread(reciever_thread);

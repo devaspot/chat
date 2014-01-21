@@ -50,17 +50,20 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 		
 		case JAB_COMMON:
 			jabber_code = msg->what;
+			flavour = BString("XMPP");
 			fNewAccount->SetEnabled(true);
 			break;
 
 		case JAB_FACEBOOK:
 			jabber_code = msg->what;
+			flavour = BString("Facebook");
 			fNewAccount->SetEnabled(false);
 			fNewAccount->SetValue(B_CONTROL_OFF);
 			break;
 			
 		case JAB_GOOGLE:
 			jabber_code = msg->what;
+			flavour = BString("Google");
 			fNewAccount->SetEnabled(false);
 			fNewAccount->SetValue(B_CONTROL_OFF);
 			break;
@@ -156,10 +159,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				jabber->SetStatus("online", os_info.c_str());
 			}
 				
-			BlabberSettings::Instance()->SetData("last-login", fUsername->Text());
-			BlabberSettings::Instance()->SetData("last-password", fPassword->Text());
-			BlabberSettings::Instance()->SetTag("auto-login", fAutoLogin->Value());
-			BlabberSettings::Instance()->WriteToFile();
+			SaveConfig();
 
 			break;
 		}
@@ -175,6 +175,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			break;
 
 		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:
+			printf("JAB_OPEN_CHAT_WITH_DOUBLE_CLICK\n");
 		case JAB_OPEN_CHAT:
 		{
 			Lock();
@@ -199,6 +200,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 
 			}
 			Unlock();
+			printf("JAB_OPEN_CHAT\n");			
 			break;
 		}
 		
@@ -261,6 +263,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			Lock();
 			BuddyWindow::Instance()->SetUser(NULL);
 			BuddyWindow::Instance()->Show();
+			printf("JAB_OPEN_ADD_BUDDY_WINDOW\n");
 			Unlock();
 			break;
 		
@@ -272,6 +275,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 				UserID *user = const_cast<UserID *>(item->GetUserID());
 				BuddyWindow::Instance()->SetUser(user);
 				BuddyWindow::Instance()->Show();
+				printf("JAB_OPEN_EDIT_BUDDY_WINDOW\n");
 			}
 			Unlock();
 			break;
@@ -328,8 +332,8 @@ BlabberMainWindow::MenusBeginning()
 	}
 }
 
-bool
-BlabberMainWindow::QuitRequested()
+void
+BlabberMainWindow::SaveConfig()
 {
 	BlabberSettings::Instance()->SetFloatData("main-window-left", Frame().left);
 	BlabberSettings::Instance()->SetFloatData("main-window-top", Frame().top);
@@ -338,7 +342,14 @@ BlabberMainWindow::QuitRequested()
 	BlabberSettings::Instance()->SetData("last-login", fUsername->Text());
 	BlabberSettings::Instance()->SetData("last-password", fPassword->Text());
 	BlabberSettings::Instance()->SetTag("auto-login", fAutoLogin->Value());
+	BlabberSettings::Instance()->SetData("flavour", flavour.String());
 	BlabberSettings::Instance()->WriteToFile();
+}
+
+bool
+BlabberMainWindow::QuitRequested()
+{
+	SaveConfig();
 	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
 }
@@ -422,13 +433,31 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	BLayoutItem* right = fUsername->CreateTextViewLayoutItem();
 	right->SetExplicitMinSize(BOX_WIDTH);
 	
+	codes["XMPP"] = JAB_COMMON;
+	codes["Facebook"] = JAB_FACEBOOK;
+	codes["Google"] = JAB_GOOGLE;
+	
 	jabber_type = new BPopUpMenu("");
 	jabber_type_menu = new BMenuField("", jabber_type);	
 	jabber_type->AddItem(new BMenuItem("XMPP", 		new BMessage(JAB_COMMON)));
 	jabber_type->AddItem(new BMenuItem("Facebook",	new BMessage(JAB_FACEBOOK)));
 	jabber_type->AddItem(new BMenuItem("Google", 	new BMessage(JAB_GOOGLE)));
-	jabber_type->FindItem("Facebook")->SetMarked(true);
-	jabber_code = JAB_FACEBOOK;
+
+	if (BlabberSettings::Instance()->Data("flavour"))
+	{
+		flavour = BString(BlabberSettings::Instance()->Data("flavour"));
+		jabber_code = codes[flavour.String()];
+
+		if (jabber_type->FindItem(flavour.String()))
+			jabber_type->FindItem(flavour.String())->SetMarked(true);
+		
+	}
+	else
+	{
+		flavour = BString("Facebook");
+		jabber_code = codes[flavour.String()];
+		jabber_type->FindItem(flavour.String())->SetMarked(true);
+	}
 	
 	BLayoutBuilder::Group<>(fLoginView, B_VERTICAL, 0)
 		.SetInsets(B_USE_DEFAULT_SPACING)

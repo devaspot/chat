@@ -51,6 +51,9 @@ SSLAdapter::InitializeSSL()
 	
 	fprintf(stderr, "Initialize SSL.\n");
 
+	ctx = SSL_CTX_new(TLSv1_client_method());
+	ssl = SSL_new(ctx);
+	
 	return true;
 }
 
@@ -68,6 +71,7 @@ SSLAdapter::InitializeSSLThread()
 	CRYPTO_set_id_callback((unsigned long (*)())CryptoCurrentThreadCallback);
 	CRYPTO_set_locking_callback(CryptoLockingCallback);
 	return 1;
+
 }
 
 bool
@@ -82,6 +86,9 @@ SSLAdapter::CleanupSSL()
 	
 	fprintf(stderr, "Cleanup SSL.\n");
 	
+	if (ctx) { SSL_CTX_free(ctx); ctx = NULL; }
+	if (ssl) { SSL_free(ssl); 	  ssl = NULL; }
+	
 	return 1;
 }
 
@@ -89,12 +96,6 @@ int
 SSLAdapter::StartTLS()
 {
 	state = (SocketState)NONE;
-	
-	if (ctx) { SSL_CTX_free(ctx); ctx = NULL; }
-	if (ssl) { SSL_free(ssl); 	  ssl = NULL; }
-	
-	ctx = SSL_CTX_new(TLSv1_client_method());
-	ssl = SSL_new(ctx);
 	
 	SSL_set_mode ( ssl, SSL_MODE_AUTO_RETRY );
 	SSL_set_fd   ( ssl, sock );
@@ -117,7 +118,6 @@ SSLAdapter::StartTLS()
 SSLAdapter::SSLAdapter():tls(false),ssl(NULL),ctx(NULL)
 {
 	state = (SocketState)NONE;
-	Create();
 	InitializeSSL();
 }
 
@@ -136,7 +136,6 @@ SSLAdapter::~SSLAdapter()
 void
 SSLAdapter::Close()
 {
-	SSL_free(ssl);
 	Socket::Close();
 	tls = false;
 	state = (SocketState)NONE;

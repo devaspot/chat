@@ -114,10 +114,11 @@ void RosterView::AttachedToWindow()
 		_presence->AddItem(_revoke_presence);
 		_presence->AddItem(_resend_presence);
 
-	_popup->AddItem(_chat_item);
-	_popup->AddSeparatorItem();
+
 	_popup->AddItem(_change_user_item);
 	_popup->AddItem(_remove_user_item);
+	_popup->AddSeparatorItem();
+	_popup->AddItem(_chat_item);
 	_popup->AddSeparatorItem();
 	_popup->AddItem(_presence);
 
