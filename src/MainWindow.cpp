@@ -49,10 +49,18 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 	switch (msg->what) {
 		
 		case JAB_COMMON:
+			jabber_code = msg->what;
+			fNewAccount->SetEnabled(true);
+			break;
+
 		case JAB_FACEBOOK:
+			jabber_code = msg->what;
+			fNewAccount->SetEnabled(false);
+			break;
+			
 		case JAB_GOOGLE:
 			jabber_code = msg->what;
-			printf("Flavour Changed: %x\n", jabber_code);
+			fNewAccount->SetEnabled(false);
 			break;
 
 		case JAB_CONNECT:
@@ -77,6 +85,9 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 						BString(username.JabberUsername().c_str()), 
 						BString(username.JabberServer().c_str()), BString(fPassword->Text()));
 						
+					fNewAccount->SetValue(B_CONTROL_ON);
+					fNewAccount->Invalidate();
+						
 					break;
 					
 				case JAB_FACEBOOK:
@@ -90,6 +101,9 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 						BString(username.JabberHandle().c_str()), 
 						BString("facebook.com"), BString(fPassword->Text()));
 						
+					fNewAccount->SetEnabled(false);
+					fNewAccount->SetValue(B_CONTROL_OFF);
+						
 					break;
 					
 				case JAB_GOOGLE:
@@ -102,11 +116,16 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 					printf("Google Server Part: '%s'\n", username.JabberServer().c_str());
 					
 					BString serverPart(username.JabberServer().c_str());
-					
+
+										
 					jabber->SetCredentials(
 						BString(username.JabberUsername().c_str()), 
 						serverPart.IsEmpty() ? BString("gmail.com") : serverPart,
 						BString(fPassword->Text()));
+						
+					fNewAccount->SetEnabled(false);
+					fNewAccount->SetValue(B_CONTROL_OFF);
+
 				}		
 					break;
 					
@@ -398,7 +417,7 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fPassword = new BTextControl("Account Password: ", "", NULL);
 	fPassword->TextView()->HideTyping(true);
 	fNewAccount = new BCheckBox(Bounds(), NULL, "Register Account", NULL, B_FOLLOW_LEFT);
-	fNewAccount->SetEnabled(true);
+	fNewAccount->SetEnabled(false);
 	fAutoLogin = new BCheckBox(Bounds(), NULL, "Auto-login", NULL, B_FOLLOW_LEFT);
 	fLogin = new BButton(Bounds(), "login", "Sign-in", new BMessage(JAB_LOGIN), B_FOLLOW_RIGHT | B_FOLLOW_BOTTOM);
 	fLogin->MakeDefault(false);
