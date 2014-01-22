@@ -96,8 +96,8 @@ void RosterView::AttachedToWindow()
 
 	_popup = new BPopUpMenu(NULL, false, false);
 
-	_chat_item         = new BMenuItem("Message...", new BMessage(JAB_OPEN_CHAT));
-	_chat_item->SetEnabled(false);
+	_chat_item         = new BMenuItem("Message...", new BMessage(JAB_OPEN_NEW_CHAT));
+	_chat_item->SetEnabled(true);
 	_change_user_item  = new BMenuItem("Edit", new BMessage(JAB_OPEN_EDIT_BUDDY_WINDOW));
 	_change_user_item->SetEnabled(false);
 	_remove_user_item  = new BMenuItem("Remove", new BMessage(JAB_REMOVE_BUDDY));
@@ -123,6 +123,7 @@ void RosterView::AttachedToWindow()
 	_popup->AddItem(_remove_user_item);
 	_popup->AddSeparatorItem();
 	_popup->AddItem(_presence);
+
 
 	UpdatePopUpMenu();
 
@@ -293,7 +294,6 @@ RosterView::UpdatePopUpMenu()
 	{
 		const UserID *user = item->GetUserID();
 
-		_chat_item->SetEnabled(true);
 		_change_user_item->SetEnabled(true);
 		_remove_user_item->SetEnabled(true);
 		
@@ -319,7 +319,6 @@ RosterView::UpdatePopUpMenu()
 	}
 	else
 	{		
-		_chat_item->SetEnabled(false);
 		_change_user_item->SetEnabled(false);
 		_remove_user_item->SetEnabled(false);
 		_presence->SetEnabled(false);

@@ -174,14 +174,16 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			jabber->Disconnect();
 			break;
 
+		case JAB_OPEN_NEW_CHAT:
 		case JAB_OPEN_CHAT:
 		{
 			uint32 buttons = 0;
 			BPoint point(0,0);
 			
 			fRosterView->GetMouse(&point, &buttons, true);
-
-			if (buttons < 1) break;
+			printf("JAB_OPEN_CHAT buttons %i\n",buttons);
+	
+			if (buttons < 1 && (msg->what != JAB_OPEN_NEW_CHAT)) break;
 			
 			Lock();
 			RosterItem *item = fRosterView->CurrentItemSelection();
