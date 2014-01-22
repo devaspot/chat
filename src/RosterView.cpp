@@ -7,6 +7,7 @@
  *
  */
 
+#include <Application.h>
 #include "RosterView.h"
 #include <cstdio>
 #include <MenuItem.h>
@@ -21,6 +22,7 @@ RosterView::RosterView(BRect frame)
 {
 	SetLowColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	SetHighColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+
 }
 
 RosterView::~RosterView()
@@ -90,7 +92,7 @@ static int _ListComparison(const BListItem *a, const BListItem *b)
 void RosterView::AttachedToWindow()
 {
 	BOutlineListView::AttachedToWindow();
-	SetInvocationMessage(new BMessage(JAB_OPEN_CHAT_WITH_DOUBLE_CLICK));
+	SetInvocationMessage(new BMessage(JAB_OPEN_CHAT));
 
 	_popup = new BPopUpMenu(NULL, false, false);
 
@@ -115,10 +117,10 @@ void RosterView::AttachedToWindow()
 		_presence->AddItem(_resend_presence);
 
 
+	_popup->AddItem(_chat_item);
+	_popup->AddSeparatorItem();
 	_popup->AddItem(_change_user_item);
 	_popup->AddItem(_remove_user_item);
-	_popup->AddSeparatorItem();
-	_popup->AddItem(_chat_item);
 	_popup->AddSeparatorItem();
 	_popup->AddItem(_presence);
 
@@ -178,8 +180,9 @@ RosterView::MouseDown(BPoint point)
 {
 	Window()->Activate(true);
 	uint32 buttons = 0;
-	GetMouse(&point, &buttons, true);
-	BOutlineListView::MouseDown(point);
+	GetMouse(&point, &buttons);
+
+	printf("buttons %i\n",buttons);
 
 	if (buttons & B_SECONDARY_MOUSE_BUTTON)
 	{
@@ -192,7 +195,10 @@ RosterView::MouseDown(BPoint point)
 			BRect r(screen_point.x - 4, screen_point.y - 20, screen_point.x + 24, screen_point.y + 4);
 			_popup->Go(screen_point, true, true, r, false);
 		}
-	}
+	} 
+	
+	BOutlineListView::MouseDown(point);
+
 }
 
 void

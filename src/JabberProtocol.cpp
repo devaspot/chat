@@ -716,11 +716,7 @@ JabberProtocol::Disconnect()
 	mainWindow->ShowLogin();
 	mainWindow->Unlock();
 	
-	//BString xml = "</stream:stream>";
-	//socketAdapter->SendData(xml);
 	socketAdapter->Close();
-	//delete socketAdapter;
-	//socketAdapter = new SSLAdapter();
 	
 	release_sem(logged);
 	suspend_thread(reciever_thread);

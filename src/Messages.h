@@ -39,7 +39,6 @@
 #define JAB_OPEN_NEW_MESSAGE            0x14000888
 #define JAB_CLOSE_MESSAGE               0x14001000
 #define JAB_OPEN_CHAT                   0x14001888
-#define JAB_OPEN_CHAT_WITH_DOUBLE_CLICK 0x14001889
 #define JAB_OPEN_NEW_CHAT               0x14002000
 #define JAB_CLOSE_CHAT                  0x14002888
 #define JAB_OPEN_NEW_GROUP_CHAT         0x14002900

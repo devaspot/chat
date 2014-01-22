@@ -174,10 +174,15 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			jabber->Disconnect();
 			break;
 
-		case JAB_OPEN_CHAT_WITH_DOUBLE_CLICK:
-			printf("JAB_OPEN_CHAT_WITH_DOUBLE_CLICK\n");
 		case JAB_OPEN_CHAT:
 		{
+			uint32 buttons = 0;
+			BPoint point(0,0);
+			
+			fRosterView->GetMouse(&point, &buttons, true);
+
+			if (buttons < 1) break;
+			
 			Lock();
 			RosterItem *item = fRosterView->CurrentItemSelection();
 			
@@ -200,7 +205,7 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 
 			}
 			Unlock();
-			printf("JAB_OPEN_CHAT\n");			
+		
 			break;
 		}
 		
