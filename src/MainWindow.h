@@ -39,6 +39,8 @@ public:
 
 			bool               	ValidateLogin();
 			void               	Login();
+			void               	LoginView(bool hidden=false);
+			void               	MainView(bool hidden=false);
 			void               	ShowLogin();
 			void               	HideLogin();
 			JabberProtocol*    	jabber;
@@ -48,7 +50,9 @@ public:
 			int					jabber_code;
 			std::map<std::string,int> codes;
 			BString				flavour;
-		
+			bool				loginViewCreated;
+			bool				mainViewCreated;
+			
 protected:
 	                           	BlabberMainWindow(BRect frame);
 		                           

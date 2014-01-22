@@ -130,6 +130,20 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 
 		case JAB_CONNECT:
 		case JAB_LOGIN:
+			if (!loginViewCreated) {
+				LoginView(true);
+			}
+			
+			if (!mainViewCreated) {
+				MainView();
+			}
+			
+			Lock();
+			HideLogin();
+			SetTitle((string("Chat − ") + UserID(string(jabber->jid.String())).JabberHandle()).c_str());
+			fStatusView->SetMessage("gathering agents, roster and presence info");
+			Unlock();
+			
 			Login();
 			break;
 
@@ -373,11 +387,11 @@ BlabberMainWindow::FrameResized(float width, float height)
 	fUsername->Invalidate();
 }
 
-BlabberMainWindow::BlabberMainWindow(BRect frame)
-	:
-	BWindow(frame, "Chat", B_DOCUMENT_WINDOW, 
-						   B_ASYNCHRONOUS_CONTROLS)
+void
+BlabberMainWindow::MainView(bool hidden=false)
 {
+	Lock();
+	
 	fDisconnect = new BMenuItem("Sign-out", new BMessage(JAB_DISCONNECT));
 	fDisconnect->SetShortcut('B', 0);
 	fAbout = new BMenuItem("About...", new BMessage(B_ABOUT_REQUESTED));
@@ -404,6 +418,7 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fEdit->SetTargetForItems(this);
 	
 	fMainView = new BView(Bounds(), "main-full", B_FOLLOW_ALL, B_WILL_DRAW);
+	if (hidden) fMainView->Hide();
 	fMainView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(fMainView);
 
@@ -426,6 +441,17 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fRosterView->TargetedByScrollView(fRosterScroller);
 	fMainView->AddChild(fRosterScroller);
 	
+	mainViewCreated = true;
+	
+	Unlock();
+	
+}
+
+void
+BlabberMainWindow::LoginView(bool hidden=false)
+{
+	Lock();
+	
 	fUsername = new BTextControl("JID: ", "", NULL);
 	fUsername->SetEnabled(true);
 	fPassword = new BTextControl("Account Password: ", "", NULL);
@@ -438,6 +464,7 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fLogin->SetTarget(this);
 
 	fLoginView = new BView(Bounds(), "login-full", B_FOLLOW_ALL, B_WILL_DRAW);
+	if (hidden) fLoginView->Hide(); 
 	fLoginView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(fLoginView);
 	
@@ -489,25 +516,37 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 		.AddGlue()
 		.View();
 
-	if (!BlabberSettings::Instance()->Data("last-login")) fUsername->SetText("kernel_joe@gjabber.org");
+	if (!BlabberSettings::Instance()->Data("last-login")) fUsername->SetText("maxim@synrc.com");
 	else fUsername->SetText(BlabberSettings::Instance()->Data("last-login"));
 	
 	fPassword->SetText(BlabberSettings::Instance()->Data("last-password"));
 	fAutoLogin->SetValue(BlabberSettings::Instance()->Tag("auto-login"));
 	fPassword->MakeFocus(true);
 	
-	MessageRepeater::Instance()->AddTarget(this);
+	loginViewCreated = true;
 	
-	if (BlabberSettings::Instance()->Tag("auto-login")) 
+	Unlock();
+}
+
+BlabberMainWindow::BlabberMainWindow(BRect frame)
+	:
+	BWindow(frame, "Chat", B_DOCUMENT_WINDOW, 
+						   B_ASYNCHRONOUS_CONTROLS)
+{
+	if (BlabberSettings::Instance()->Tag("auto-login"))  
 	{
-		fLoginView->Hide();
-		fMainView->Show();
+		MainView();
 		PostMessage(JAB_LOGIN);
-	} else
-	{
-		fLoginView->Show();
-		fMainView->Hide();
+		loginViewCreated = false;
 	}
+	else
+	{
+		LoginView();
+		MainView(true);
+	}
+	
+	MessageRepeater::Instance()->AddTarget(this);
+
 }
 
 bool
@@ -593,20 +632,17 @@ BlabberMainWindow::Instance()
 void
 BlabberMainWindow::ShowLogin()
 {
-	Lock();
 	int width = ceilf(BOX_WIDTH.width*1.6);
 	SetSizeLimits(width, width, 250, 250);
 	while (!fMainView->IsHidden()) fMainView->Hide();
 	while (fLoginView->IsHidden()) fLoginView->Show();
 	fLogin->MakeDefault(true);
 	fLogin->SetEnabled(true);
-	Unlock();
 }
 
 void
 BlabberMainWindow::HideLogin()
 {
-	Lock();
 	BlabberSettings *settings = BlabberSettings::Instance();
 	SetSizeLimits(100, 3000, 200, 3000);
 	fLogin->MakeDefault(false);
@@ -625,5 +661,4 @@ BlabberMainWindow::HideLogin()
 		main_window_height = 432; 
 	}
 	ResizeTo(main_window_width,main_window_height);
-	Unlock();
 }
