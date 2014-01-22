@@ -42,6 +42,66 @@ BlabberMainWindow::~BlabberMainWindow()
 }
 
 void
+BlabberMainWindow::Login()
+{
+	if (!ValidateLogin()) return;
+
+	fLogin->SetEnabled(false);
+		
+	UserID username(fUsername->Text());
+			
+	switch (jabber_code)
+	{
+		case JAB_COMMON:
+					
+			jabber->SetConnection(
+				BString(username.JabberServer().c_str()), 5223, true);
+						
+			jabber->SetCredentials(
+				BString(username.JabberUsername().c_str()), 
+				BString(username.JabberServer().c_str()), BString(fPassword->Text()));
+						
+			break;
+					
+		case JAB_FACEBOOK:
+
+			jabber->SetConnection(
+				BString("chat.facebook.com"), 5222, false);
+
+			printf("Facebook User Part: '%s'\n", username.JabberHandle().c_str());
+										
+			jabber->SetCredentials(
+				BString(username.JabberHandle().c_str()), 
+				BString("facebook.com"), BString(fPassword->Text()));
+					
+			break;
+					
+		case JAB_GOOGLE:
+		{
+			jabber->SetConnection(
+				BString("talk.google.com"), 443, true);
+					
+			printf("Google User Part: '%s'\n", username.JabberUsername().c_str());
+			printf("Google Server Part: '%s'\n", username.JabberServer().c_str());
+					
+			BString serverPart(username.JabberServer().c_str());
+
+			jabber->SetCredentials(
+				BString(username.JabberUsername().c_str()), 
+				serverPart.IsEmpty() ? BString("gmail.com") : serverPart,
+				BString(fPassword->Text()));
+			
+		}		
+			break;
+			
+		default:
+			break;
+	}
+			
+	jabber->LogOn();
+}
+
+void
 BlabberMainWindow::MessageReceived(BMessage *msg)
 {
 	static bool reported_info = false;
@@ -69,78 +129,18 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			break;
 
 		case JAB_CONNECT:
-		case JAB_LOGIN: {
-
-			if (!ValidateLogin()) {
-				break;
-			}
-
-			fLogin->SetEnabled(false);
-			
-			UserID username(fUsername->Text());
-			
-			switch (jabber_code)
-			{
-				case JAB_COMMON:
-					
-					jabber->SetConnection(
-						BString(username.JabberServer().c_str()), 5223, true);
-						
-					jabber->SetCredentials(
-						BString(username.JabberUsername().c_str()), 
-						BString(username.JabberServer().c_str()), BString(fPassword->Text()));
-						
-					break;
-					
-				case JAB_FACEBOOK:
-
-					jabber->SetConnection(
-						BString("chat.facebook.com"), 5222, false);
-
-					printf("Facebook User Part: '%s'\n", username.JabberHandle().c_str());
-										
-					jabber->SetCredentials(
-						BString(username.JabberHandle().c_str()), 
-						BString("facebook.com"), BString(fPassword->Text()));
-					
-					break;
-					
-				case JAB_GOOGLE:
-				{
-
-					jabber->SetConnection(
-						BString("talk.google.com"), 443, true);
-					
-					printf("Google User Part: '%s'\n", username.JabberUsername().c_str());
-					printf("Google Server Part: '%s'\n", username.JabberServer().c_str());
-					
-					BString serverPart(username.JabberServer().c_str());
-
-					jabber->SetCredentials(
-						BString(username.JabberUsername().c_str()), 
-						serverPart.IsEmpty() ? BString("gmail.com") : serverPart,
-						BString(fPassword->Text()));
-						
-				}		
-					break;
-					
-				default:
-					break;
-			}
-			
-			jabber->LogOn();
-			
+		case JAB_LOGIN:
+			Login();
 			break;
-		}
 
 		case JAB_LOGGED_IN: 
 		{
+			Lock();
 			HideLogin();
-
 			SetTitle((string("Chat − ") + UserID(string(jabber->jid.String())).JabberHandle()).c_str());
-			
 			fStatusView->SetMessage("gathering agents, roster and presence info");
-						
+			Unlock();
+				
 			jabber->RequestRoster();
 			jabber->SendStorageRequest("storage", "storage:bookmarks");
 			
@@ -160,18 +160,19 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			}
 				
 			SaveConfig();
-
+			
 			break;
 		}
 		
 		case JAB_DISCONNECT:
-			TalkManager::Instance()->Reset();
 			Lock();
-			SetTitle("Chat");
-			fStatusView->SetMessage("disconnect");
+			ShowLogin();
 			Unlock();
+						
+			TalkManager::Instance()->Reset();
 			jabber->_storage_supported = true;
 			jabber->Disconnect();
+
 			break;
 
 		case JAB_OPEN_NEW_CHAT:
@@ -188,8 +189,8 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			Lock();
 			RosterItem *item = fRosterView->CurrentItemSelection();
 			
-			if (item != NULL) {
-				
+			if (item != NULL)
+			{
 				TalkManager::Instance()->Lock();
 				
 				UserID *user = (UserID*)item->GetUserID();
@@ -198,16 +199,18 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 					if (!jabber->_storage_supported)
 						user->_room_nick = string(BString("__").Append(jabber->user).String());
 				
-					ChatWindow *window = TalkManager::Instance()->CreateTalkSession(ChatWindow::GROUP, user);
+					ChatWindow *window = TalkManager::Instance()->
+											CreateTalkSession(ChatWindow::GROUP, user);
 				}
 				else
-					ChatWindow *window = TalkManager::Instance()->CreateTalkSession(ChatWindow::CHAT, user);
+					ChatWindow *window = TalkManager::Instance()->
+											CreateTalkSession(ChatWindow::CHAT, user);
 						
 				TalkManager::Instance()->Unlock();
 
 			}
+			
 			Unlock();
-		
 			break;
 		}
 		
@@ -216,10 +219,12 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			Lock();
 			RosterItem *item = fRosterView->CurrentItemSelection();
 			
-			if (item != NULL) {
+			if (item != NULL)
+			{
 				UserID *user = (UserID*)item->GetUserID();
 				jabber->SendSubscriptionRequest(user->JabberHandle());
 			}
+			
 			Unlock();
 			break;
 		}
@@ -230,7 +235,8 @@ BlabberMainWindow::MessageReceived(BMessage *msg)
 			fprintf(stderr, "Sending unsubscribe...");
 			RosterItem *item = fRosterView->CurrentItemSelection();
 			
-			if (item != NULL) {
+			if (item != NULL)
+			{
 				UserID *user = (UserID*)item->GetUserID();
 				jabber->SendUnsubscriptionRequest(user->JabberHandle());
 				fprintf(stderr, " for user %s. Done.\n", user->JabberHandle().c_str());
@@ -367,8 +373,6 @@ BlabberMainWindow::FrameResized(float width, float height)
 	fUsername->Invalidate();
 }
 
-
-
 BlabberMainWindow::BlabberMainWindow(BRect frame)
 	:
 	BWindow(frame, "Chat", B_DOCUMENT_WINDOW, 
@@ -485,9 +489,6 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 		.AddGlue()
 		.View();
 
-	fLoginView->Hide();
-	fMainView->Hide();
-
 	if (!BlabberSettings::Instance()->Data("last-login")) fUsername->SetText("kernel_joe@gjabber.org");
 	else fUsername->SetText(BlabberSettings::Instance()->Data("last-login"));
 	
@@ -495,14 +496,23 @@ BlabberMainWindow::BlabberMainWindow(BRect frame)
 	fAutoLogin->SetValue(BlabberSettings::Instance()->Tag("auto-login"));
 	fPassword->MakeFocus(true);
 	
-	ShowLogin();
-	
 	MessageRepeater::Instance()->AddTarget(this);
 	
+	if (BlabberSettings::Instance()->Tag("auto-login")) 
+	{
+		fLoginView->Hide();
+		fMainView->Show();
+		PostMessage(JAB_LOGIN);
+	} else
+	{
+		fLoginView->Show();
+		fMainView->Hide();
+	}
 }
 
-bool BlabberMainWindow::ValidateLogin() {
-	// existance of username
+bool
+BlabberMainWindow::ValidateLogin()
+{
 	if (!strcmp(fUsername->Text(), "")) {
 		ModalAlertFactory::Alert("Wait, you haven't specified your Jabber ID yet.\n(e.g. me@jabber.org)",
 								 "Doh!", NULL, NULL, B_WIDTH_FROM_LABEL, B_STOP_ALERT);
@@ -511,7 +521,6 @@ bool BlabberMainWindow::ValidateLogin() {
 		return false;
 	}
 
-	// validity of username
 	UserID username(fUsername->Text());
 
 	if (username.WhyNotValidJabberHandle().size()) {
@@ -584,34 +593,37 @@ BlabberMainWindow::Instance()
 void
 BlabberMainWindow::ShowLogin()
 {
+	Lock();
 	int width = ceilf(BOX_WIDTH.width*1.6);
 	SetSizeLimits(width, width, 250, 250);
+	while (!fMainView->IsHidden()) fMainView->Hide();
+	while (fLoginView->IsHidden()) fLoginView->Show();
 	fLogin->MakeDefault(true);
-	fMainView->Hide();
-	fLoginView->Show();
 	fLogin->SetEnabled(true);
+	Unlock();
 }
 
 void
 BlabberMainWindow::HideLogin()
 {
-	
+	Lock();
 	BlabberSettings *settings = BlabberSettings::Instance();
-	
 	SetSizeLimits(100, 3000, 200, 3000);
 	fLogin->MakeDefault(false);
-	while (fMainView->IsHidden()) fMainView->Show();
+	fLogin->SetEnabled(false);
 	while (!fLoginView->IsHidden()) fLoginView->Hide();
+	while (fMainView->IsHidden()) fMainView->Show();
 	float main_window_width, main_window_height;
 	if (settings->Data("main-window-width") && settings->Data("main-window-height"))
-		{
-			main_window_width  = atof(settings->Data("main-window-width"));
-			main_window_height = atof(settings->Data("main-window-height"));
-		} 
-		else
-		{
-			main_window_width  = 210;
-			main_window_height = 432; 
-		}
+	{
+		main_window_width  = atof(settings->Data("main-window-width"));
+		main_window_height = atof(settings->Data("main-window-height"));
+	} 
+	else
+	{
+		main_window_width  = 210;
+		main_window_height = 432; 
+	}
 	ResizeTo(main_window_width,main_window_height);
+	Unlock();
 }

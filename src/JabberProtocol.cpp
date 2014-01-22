@@ -713,7 +713,6 @@ JabberProtocol::Disconnect()
 	mainWindow->fRosterView->MakeEmpty();
 	mainWindow->fRosterView->CreateRoots();
 	mainWindow->fRosterView->fUsers.clear();
-	mainWindow->ShowLogin();
 	mainWindow->Unlock();
 	
 	socketAdapter->Close();

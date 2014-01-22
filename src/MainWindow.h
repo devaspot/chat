@@ -38,6 +38,7 @@ public:
 			void				SaveConfig();
 
 			bool               	ValidateLogin();
+			void               	Login();
 			void               	ShowLogin();
 			void               	HideLogin();
 			JabberProtocol*    	jabber;
