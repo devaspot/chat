@@ -21,6 +21,8 @@ EditingFilter::Filter(BMessage *message, BHandler **target)
 {
 	int32 modifiers;
 	
+	bool sendWithEnter = false;
+	
 	int8 byte;
 	message->FindInt8("byte", &byte);
 
@@ -37,14 +39,22 @@ EditingFilter::Filter(BMessage *message, BHandler **target)
 	{
 		//window->RevealNextHistory();
 	}
-	else if ((modifiers & B_COMMAND_KEY) != 0 && byte == B_ENTER)
+	else if (byte == B_ENTER)
 	{
-		view->Insert("\n");
-		return B_SKIP_MESSAGE;
+		if (((modifiers & B_COMMAND_KEY) == 0) ^ (int)sendWithEnter)
+		{
+			view->Insert("\n");
+			return B_SKIP_MESSAGE;
+		}
+		else 
+		{
+			window->PostMessage(JAB_CHAT_SENT);
+			return B_SKIP_MESSAGE;
+		}
 	}
-	else if ((modifiers & B_COMMAND_KEY) == 0 && byte == B_ENTER)
+	else if (byte == B_ESCAPE)
 	{
-		window->PostMessage(JAB_CHAT_SENT);
+		window->Minimize(true);
 	}
 	
 	return B_DISPATCH_MESSAGE;
