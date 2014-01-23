@@ -18,7 +18,7 @@ class App : public BApplication
 
 public:
 
-				App(void);
+					App(void);
 			void	AboutRequested();
 
 };
