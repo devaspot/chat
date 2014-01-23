@@ -19,7 +19,7 @@ class App : public BApplication
 public:
 
 				App(void);
-			void 	AboutRequested();
+			void	AboutRequested();
 
 };
 
